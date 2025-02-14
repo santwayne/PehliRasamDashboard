@@ -1,6 +1,6 @@
-import { Menu, Layout } from 'antd';
-import { sidebarLinks } from '../../utils/SidebarLinks';
-import { useNavigate } from 'react-router-dom';
+import { Menu, Layout } from "antd";
+import { sidebarLinks } from "../../utils/SidebarLinks";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   collapsed: boolean;
@@ -16,23 +16,31 @@ const Sidebar = ({ collapsed }: Props) => {
       trigger={null}
       collapsible
       collapsed={collapsed}
-      className="bg-white"
-      style={{ 
-        height: '100vh', 
-        overflowY: 'auto', 
-        background: '#ffffff'  // Ensures no black background
+      style={{
+        height: "100vh",
+        overflowY: "auto",
+        background: "#ffffff",
       }}
     >
       <Menu
         mode="inline"
-        defaultSelectedKeys={['/dashboard']}
+        defaultSelectedKeys={["/dashboard"]}
         onClick={(e) => navigate(e.key)}
-        items={sidebarLinks.map((link) => ({
-          key: link.key,
-          icon: link.icon,
-          label: link.label,
-        }))}
-      />
+      >
+        {sidebarLinks.map((link) =>
+          link.children ? (
+            <Menu.SubMenu key={link.key} icon={link.icon} title={link.label}>
+              {link.children.map((child) => (
+                <Menu.Item key={child.key}>{child.label}</Menu.Item>
+              ))}
+            </Menu.SubMenu>
+          ) : (
+            <Menu.Item key={link.key} icon={link.icon}>
+              {link.label}
+            </Menu.Item>
+          )
+        )}
+      </Menu>
     </Sider>
   );
 };

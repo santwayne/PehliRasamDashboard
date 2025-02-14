@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Input, Layout } from "antd";
+import { Button, Input } from "antd";
 import {
   RiMenuFoldLine,
   RiMenuUnfoldLine,
@@ -18,8 +18,6 @@ type Props = {
   collapsed: boolean;
 };
 
-const { Header } = Layout;
-
 const NavHeader = ({ onClick, collapsed }: Props) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,53 +26,81 @@ const NavHeader = ({ onClick, collapsed }: Props) => {
   const confirmLogout = () => navigate("/auth/login");
 
   return (
-    <Header className="!fixed !top-0 !left-0 !w-full !h-16 !bg-gray-100 !shadow-md !flex !items-center !px-6 !z-50">
-      {/* Left: Sidebar Toggle & Title */}
-      <div className="flex items-center gap-3">
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "64px",
+        backgroundColor: "white", // Equivalent to bg-gray-100
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Equivalent to shadow-md
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        zIndex: 50,
+      }}
+    >
+      {/* Left Section: Sidebar Toggle & Title */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <Button
           type="text"
           icon={collapsed ? <RiMenuUnfoldLine /> : <RiMenuFoldLine />}
           onClick={onClick}
-          className="text-2xl text-gray-600 cursor-pointer"
+          style={{ fontSize: "24px", color: "#4b5563", cursor: "pointer" }}
         />
-        <h1 className="text-xl font-medium">Pehli Rasam</h1>
+        <h1 style={{ fontSize: "20px", fontWeight: 500 }}>Pehli Rasam</h1>
       </div>
 
-      {/* Center: Search Bar */}
-      <div className="flex-1 flex justify-center">
-        <Input
-          placeholder="Search..."
-          prefix={<RiSearchLine className="text-gray-400" />}
-          className="rounded-full w-[300px]"
-        />
-      </div>
+      {/* Right Section: Search Bar & Icons */}
+      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        {/* Search Input */}
+        <div style={{ width: "256px" }}>
+          <Input
+            placeholder="Search..."
+            prefix={<RiSearchLine style={{ color: "#9ca3af" }} />}
+            style={{
+              borderRadius: "999px", // Rounded-full effect
+              width: "100%",
+            }}
+          />
+        </div>
 
-      {/* Right: Icons */}
-      <div className="flex items-center gap-4">
-        <RiQuestionLine className="text-xl text-gray-500 cursor-pointer" />
-        <RiSettings3Line className="text-xl text-gray-500 cursor-pointer" />
-        <RiUserLine className="text-xl text-blue-500 cursor-pointer" />
-        <RiNotification3Line className="text-xl text-gray-500 cursor-pointer relative">
-          <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-        </RiNotification3Line>
-        <RiLogoutBoxLine className="text-xl text-gray-500 cursor-pointer" onClick={handleLogout} />
+        {/* Icons */}
+        <RiSettings3Line style={{ fontSize: "20px", color: "#6b7280", cursor: "pointer" }} />
+        <RiUserLine style={{ fontSize: "20px", color: "#3b82f6", cursor: "pointer" }} />
+        <div style={{ position: "relative" }}>
+          <RiNotification3Line style={{ fontSize: "20px", color: "#6b7280", cursor: "pointer" }} />
+          <span
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              height: "8px",
+              width: "8px",
+              backgroundColor: "#ef4444",
+              borderRadius: "50%",
+            }}
+          ></span>
+        </div>
+        <RiLogoutBoxLine
+          style={{ fontSize: "20px", color: "#6b7280", cursor: "pointer" }}
+          onClick={handleLogout}
+        />
       </div>
 
       {/* Logout Confirmation Modal */}
-      <Modal
-        title="Confirm Logout"
-        isModalOpen={isModalOpen}
-        handleCancel={() => setIsModalOpen(false)}
-      >
+      <Modal title="Confirm Logout" isModalOpen={isModalOpen} handleCancel={() => setIsModalOpen(false)}>
         <p>Are you sure you want to log out?</p>
-        <div className="flex justify-end gap-3 mt-4">
+        <div style={{ display: "flex", justifyContent: "end", gap: "12px", marginTop: "16px" }}>
           <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
           <Button type="primary" danger onClick={confirmLogout}>
             Logout
           </Button>
         </div>
       </Modal>
-    </Header>
+    </div>
   );
 };
 

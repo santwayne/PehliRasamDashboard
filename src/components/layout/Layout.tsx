@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Layout } from 'antd';
-import Sidebar from './Sidebar';
-import NavHeader from './Header';
-import useIsMobile from '../../hooks/IsMobile';
+import React, { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import { Layout } from "antd";
+import Sidebar from "./Sidebar";
+import NavHeader from "./Header";
+import useIsMobile from "../../hooks/IsMobile";
 
 const { Content } = Layout;
 
@@ -16,22 +16,30 @@ const App: React.FC = () => {
   }, [isMobile]);
 
   return (
-    <Layout className="h-screen">
+    <Layout style={{ height: "100vh", overflow: "hidden" }}>
       {/* Fixed Header */}
       <NavHeader onClick={() => setCollapsed(!collapsed)} collapsed={collapsed} />
 
-      {/* Sidebar & Content Layout */}
-      <Layout className="flex pt-[64px] h-full">
-        {/* Sidebar (30%) */}
-        <div className={`transition-all fixed left-0 top-[64px] bg-white shadow-lg h-[calc(100vh-64px)] ${
-          collapsed ? 'w-16' : 'w-3/10'
-        }`}>
+      <Layout style={{ paddingTop: "64px" }}>
+        {/* Fixed Sidebar */}
+        <div
+          className={`fixed left-0 top-[64px] bg-white shadow-lg h-[calc(100vh-64px)] transition-all ${
+            collapsed ? "w-16" : "w-60"
+          }`}
+        >
           <Sidebar collapsed={collapsed} />
         </div>
 
-        {/* Content (70%) */}
-        <div className={`transition-all flex-1 overflow-auto p-6 ${collapsed ? 'ml-16' : 'ml-3/10'}`}>
-
+        {/* Scrollable Content Area */}
+        <div
+          className={`transition-all flex-1 overflow-y-auto p-6 ${
+            collapsed ? "ml-16" : "ml-60"
+          }`}
+          style={{
+            height: "calc(100vh - 64px)", // Ensure content fits without extra scroll
+            overflowY: "auto", // Allows scrolling only in the content area
+          }}
+        >
           <Content>
             <Outlet />
           </Content>
