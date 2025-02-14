@@ -3,7 +3,7 @@ import CardComponent from "../../components/layout/CardComponent";
 
 const cardData = [
   {
-    title: "Number of Sales",
+    title: "Clients Added Today",
     value: 12,
     icon: <FaRegChartBar />,
     chartColor: "#4CAF50",
@@ -13,7 +13,7 @@ const cardData = [
     data: [{ value: 10 }, { value: 15 }, { value: 12 }, { value: 18 }, { value: 14 }, { value: 20 }],
   },
   {
-    title: "Number of Clients",
+    title: "Events Today",
     value: 10,
     icon: <FaUsers />,
     chartColor: "#2196F3",
@@ -23,7 +23,7 @@ const cardData = [
     data: [{ value: 25 }, { value: 30 }, { value: 28 }, { value: 35 }, { value: 32 }, { value: 40 }],
   },
   {
-    title: "Yearly Revenue",
+    title: "Sent Emails Today",
     value: 10,
     icon: <FaMoneyBillAlt />,
     chartColor: "#FFC107",

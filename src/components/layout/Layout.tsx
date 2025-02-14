@@ -20,24 +20,27 @@ const App: React.FC = () => {
       {/* Fixed Header */}
       <NavHeader onClick={() => setCollapsed(!collapsed)} collapsed={collapsed} />
 
-      <Layout style={{ paddingTop: "64px" }}>
-        {/* Fixed Sidebar */}
+      <Layout style={{ paddingTop: "64px", display: "flex" }}>
+        {/* Fixed Sidebar with 35% Width */}
         <div
-          className={`fixed left-0 top-[64px] bg-white shadow-lg h-[calc(100vh-64px)] transition-all ${
-            collapsed ? "w-16" : "w-60"
-          }`}
+          className={`fixed left-0 top-[64px] bg-white shadow-lg h-[calc(100vh-64px)] transition-all`}
+          style={{
+            width: collapsed ? "5%" : "18%",
+            transition: "width 0.3s ease-in-out",
+          }}
         >
           <Sidebar collapsed={collapsed} />
         </div>
 
-        {/* Scrollable Content Area */}
+        {/* Scrollable Content Area with 65% Width */}
         <div
-          className={`transition-all flex-1 overflow-y-auto p-6 ${
-            collapsed ? "ml-16" : "ml-60"
-          }`}
+          className="transition-all flex-1 overflow-y-auto p-6"
           style={{
-            height: "calc(100vh - 64px)", // Ensure content fits without extra scroll
-            overflowY: "auto", // Allows scrolling only in the content area
+            marginLeft: collapsed ? "5%" : "18%",
+            width: collapsed ? "95%" : "72%",
+            height: "calc(100vh - 64px)",
+            overflowY: "auto",
+            transition: "margin-left 0.3s ease-in-out, width 0.3s ease-in-out",
           }}
         >
           <Content>
@@ -46,6 +49,7 @@ const App: React.FC = () => {
         </div>
       </Layout>
     </Layout>
+
   );
 };
 

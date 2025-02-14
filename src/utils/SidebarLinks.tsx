@@ -7,7 +7,7 @@ type SidebarLink = {
   key: string;
   icon: React.ReactNode;
   label: string;
-  children?: SidebarLink[]; // Optional sub-menu items
+  children?: SidebarLink[];
 };
 
 export const sidebarLinks: SidebarLink[] = [
@@ -20,7 +20,7 @@ export const sidebarLinks: SidebarLink[] = [
       { key: "/dashboard/timeline", icon: null, label: "Timeline" },
       { key: "/dashboard/notes", icon: null, label: "Notes" },
       { key: "/dashboard/profile-update", icon: null, label: "Profile Update" },
-      
+
     ],
   },
   {
