@@ -21,35 +21,25 @@ const App: React.FC = () => {
       <NavHeader onClick={() => setCollapsed(!collapsed)} collapsed={collapsed} />
 
       <Layout style={{ paddingTop: "64px", display: "flex" }}>
-        {/* Fixed Sidebar with 35% Width */}
-        <div
-          className={`fixed left-0 top-[64px] bg-white shadow-lg h-[calc(100vh-64px)] transition-all`}
-          style={{
-            width: collapsed ? "5%" : "18%",
-            transition: "width 0.3s ease-in-out",
-          }}
-        >
-          <Sidebar collapsed={collapsed} />
-        </div>
+        {/* Sidebar */}
+        <Sidebar collapsed={collapsed} />
 
-        {/* Scrollable Content Area with 65% Width */}
-        <div
-          className="transition-all flex-1 overflow-y-auto p-6"
+        {/* Scrollable Content */}
+        <Layout
           style={{
-            marginLeft: collapsed ? "5%" : "18%",
-            width: collapsed ? "95%" : "72%",
+            marginLeft: collapsed ? 70 : 250, // Decreased Sidebar Width
+            transition: "margin-left 0.3s ease-in-out",
             height: "calc(100vh - 64px)",
             overflowY: "auto",
-            transition: "margin-left 0.3s ease-in-out, width 0.3s ease-in-out",
+            padding: "24px",
           }}
         >
           <Content>
             <Outlet />
           </Content>
-        </div>
+        </Layout>
       </Layout>
     </Layout>
-
   );
 };
 

@@ -3,7 +3,7 @@
 @tailwind utilities;
 @import "tailwindcss";
 
-body{
+body {
   margin: 0;
 }
 
@@ -16,6 +16,7 @@ body{
   position: relative;
   animation: l24 1s infinite linear;
 }
+
 .loader:before,
 .loader:after {
   content: '';
@@ -26,9 +27,11 @@ body{
   animation: inherit;
   animation-duration: 2s;
 }
+
 .loader:after {
   animation-duration: 4s;
 }
+
 @keyframes l24 {
   100% {
     transform: rotate(1turn);
