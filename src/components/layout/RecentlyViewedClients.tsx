@@ -45,8 +45,8 @@ const RecentlyViewedClients: React.FC<RecentlyViewedClientsProps> = ({ clients }
               </div>
             )}
             <p className="text-md text-gray-700 mt-2 truncate w-20 text-center font-medium">{client.name}</p>
-            <button 
-              className="absolute -bottom-2 right-0 bg-gray-300 text-gray-700 text-sm px-2 py-1 rounded-full cursor-pointer shadow-md" 
+            <button
+              className="absolute -bottom-2 right-0 bg-gray-300 text-gray-700 text-sm px-2 py-1 rounded-full cursor-pointer shadow-md"
               onClick={() => showModal(client)}
             >
               ℹ
@@ -54,7 +54,7 @@ const RecentlyViewedClients: React.FC<RecentlyViewedClientsProps> = ({ clients }
           </div>
         ))}
       </div>
-      
+
       <Modal title="Client Information" visible={isModalVisible} onCancel={handleCancel} footer={null} width={500}>
         {selectedClient && (
           <div className="p-4">

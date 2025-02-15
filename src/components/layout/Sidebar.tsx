@@ -16,7 +16,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       trigger={null}
       collapsible
       collapsed={collapsed}
-      width={collapsed ? 70 : 250} // Decreased Width
+      width={collapsed ? 70 : 250}
       style={{
         height: "100vh",
         overflow: "hidden",

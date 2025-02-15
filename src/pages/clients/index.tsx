@@ -1,24 +1,25 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input, Button, Select, Dropdown, Menu, Card, Avatar, Modal } from "antd";
-import { SearchOutlined, AppstoreOutlined, BarsOutlined, UserAddOutlined, DownOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { SearchOutlined, AppstoreOutlined, UserAddOutlined, DownOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
 const clientData = [
-  { 
-    id: 1, name: "Gursimran Kaur", img: "/images/gursimran.jpg", tags: ["#9C27B0", "#4CAF50", "#F44336"],
-    email: "baldevgill8055@gmail.com", phone: "0457 057 762", location: "Brisbane, QLD, Australia", 
-    status: "Active", membership: "P.R Paid Member", submitted: "No", created: "11 Oct 2024 8:11 AM" 
+  {
+    id: 1, name: "Gursimran Kaur", initials: "I", tags: ["#9C27B0", "#4CAF50", "#F44336"],
+    email: "baldevgill8055@gmail.com", phone: "0457 057 762", location: "Brisbane, QLD, Australia",
+    status: "Active", membership: "P.R Paid Member", submitted: "No", created: "11 Oct 2024 8:11 AM"
   },
-  { 
-    id: 2, name: "Tarandeep Singh", img: "/images/tarandeep.jpg", tags: ["#E91E63", "#4CAF50", "#F44336"],
+  {
+    id: 2, name: "Tarandeep Singh", img: "", tags: ["#E91E63", "#4CAF50", "#F44336"],
     email: "tarandeep@gmail.com", phone: "0457 123 456", location: "Sydney, NSW, Australia",
-    status: "Active", membership: "Free Member", submitted: "Yes", created: "12 Oct 2024 10:30 AM" 
+    status: "Active", membership: "Free Member", submitted: "Yes", created: "12 Oct 2024 10:30 AM"
   },
-  { 
-    id: 3, name: "Anuradha Ahluwalia", img: "", tags: ["#F44336"], 
+  {
+    id: 3, name: "Anuradha Ahluwalia", img: "", tags: ["#F44336"],
     email: "anuradha@gmail.com", phone: "0457 654 321", location: "Melbourne, VIC, Australia",
-    status: "Inactive", membership: "Trial Member", submitted: "No", created: "09 Oct 2024 5:00 PM" 
+    status: "Inactive", membership: "Trial Member", submitted: "No", created: "09 Oct 2024 5:00 PM"
   },
 ];
 
@@ -26,6 +27,7 @@ const Clients: React.FC = () => {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const openModal = (client: any) => {
     setSelectedClient(client);
@@ -46,11 +48,12 @@ const Clients: React.FC = () => {
             <Option value="first">First Name</Option>
             <Option value="last">Last Name</Option>
           </Select>
-          <Button icon={<UserAddOutlined />} type="primary">+ Client</Button>
+          <Button icon={<UserAddOutlined />} type="primary" onClick={() => navigate("/dashboard/add-client")}>
+            + Client
+          </Button>
         </div>
         <div className="flex gap-2">
           <Button icon={<AppstoreOutlined />} onClick={() => setView("grid")} />
-          <Button icon={<BarsOutlined />} onClick={() => setView("list")} />
           <span className="font-semibold text-gray-600">2198</span>
         </div>
       </div>
@@ -59,7 +62,10 @@ const Clients: React.FC = () => {
       <div className={view === "grid" ? "grid grid-cols-5 gap-4" : "flex flex-col gap-2"}>
         {clientData.map((client) => (
           <Card key={client.id} className="p-2 shadow-md flex items-center gap-3">
-            <Avatar shape="square" size={100} src={client.img || "/images/dummy.jpg"} />
+            <Avatar shape="square" size={100} style={{ backgroundColor: "#607D8B", color: "#fff", fontSize: "32px" }}>
+              {client.img ? <img src={client.img} alt={client.name} /> : client.name.split(' ').map(n => n[0]).join('')}
+            </Avatar>
+
             <div>
               <h3 className="text-lg font-semibold">{client.name}</h3>
               <div className="flex gap-2 mt-1">
@@ -82,18 +88,35 @@ const Clients: React.FC = () => {
         footer={null}
       >
         {selectedClient && (
-          <div>
-            <p><strong>📍 Location:</strong> {selectedClient.location}</p>
-            <p><strong>🟢 Status:</strong> {selectedClient.status}</p>
-            <p><strong>💳 Membership:</strong> {selectedClient.membership}</p>
-            <p><strong>📧 Email:</strong> {selectedClient.email}</p>
-            <p><strong>📞 Phone:</strong> {selectedClient.phone}</p>
-            <p><strong>📂 Submitted:</strong> {selectedClient.submitted}</p>
-            <p><strong>📅 Created:</strong> {selectedClient.created}</p>
-            <a href={`/profile/${selectedClient.id}`} className="text-blue-500">🔗 Click for Profile</a>
+          <div className="flex gap-6 items-start p-4">
+            {/* Initial or Image */}
+            <div className="w-1/3 flex justify-center items-center bg-blue-500 text-white rounded-full h-28 w-28 text-4xl shadow-md">
+              {selectedClient.image ? (
+                <img
+                  src={selectedClient.image}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                selectedClient.name.charAt(0)
+              )}
+            </div>
+            {/* Content */}
+            <div className="w-2/3 space-y-2">
+              <p className="text-gray-600"><strong>📍 Location:</strong> {selectedClient.location}</p>
+              <p className="text-gray-600"><strong>🟢 Status:</strong> {selectedClient.status}</p>
+              <p className="text-gray-600"><strong>💳 Membership:</strong> {selectedClient.membership}</p>
+              <p className="text-gray-600"><strong>📧 Email:</strong> {selectedClient.email}</p>
+              <p className="text-gray-600"><strong>📞 Phone:</strong> {selectedClient.phone}</p>
+              <p className="text-gray-600"><strong>📂 Submitted:</strong> {selectedClient.submitted}</p>
+              <p className="text-gray-600"><strong>📅 Created:</strong> {selectedClient.created}</p>
+              <a href={`/profile/${selectedClient.id}`} className="text-blue-600 hover:underline">🔗 Click for Profile</a>
+            </div>
           </div>
         )}
       </Modal>
+
+
     </div>
   );
 };

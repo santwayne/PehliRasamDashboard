@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { Modal } from "antd";
 
 interface Client {
@@ -51,7 +51,7 @@ const RecentlySubmittedClients = () => {
               </div>
             )}
             <div>
-              <p className="text-md font-medium">{client.name} 
+              <p className="text-md font-medium">{client.name}
                 <button className="ml-1 text-gray-500" onClick={() => showModal(client)}>ℹ</button>
               </p>
               <p className="text-xs text-gray-500">{client.location}</p>
@@ -60,7 +60,7 @@ const RecentlySubmittedClients = () => {
           </div>
         ))}
       </div>
-      
+
       <Modal title="Client Information" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         {selectedClient && (
           <div>
