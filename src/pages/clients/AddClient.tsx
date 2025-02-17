@@ -1,9 +1,22 @@
 import { Mail, Phone, MapPin, Camera } from "lucide-react";
-import { Collapse, Select } from "antd";
+import { Collapse, Select, Input, Upload, Button } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { useState } from "react";
 
 const { Panel } = Collapse;
 
 const AddClient = () => {
+
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    // Handle file upload
+    const handleUpload = (info: any) => {
+        if (info.file.status === "done") {
+            const fileUrl = URL.createObjectURL(info.file.originFileObj);
+            setImageUrl(fileUrl);
+        }
+    };
+
     return (
         <div className="flex h-screen">
             {/* Left Fixed Sidebar (Scrollable) */}
@@ -57,112 +70,185 @@ const AddClient = () => {
                         expandIconPosition="right"
                         defaultActiveKey={["1"]}
                     >
-                        {/* Membership Information Panel */}
+
                         <Panel header="Membership Information" key="1">
-                            <table className="w-full text-left border-collapse">
-                                <tbody>
-                                    {[
-                                        { label: "Profile Note", value: "12-FEB-2025 : Match Shared only" },
-                                        { label: "Membership Type", options: ["Free", "Premium", "VIP"] },
-                                        { label: "Profile Made By", options: ["Self", "Parents", "Relative"] },
-                                        { label: "Registered On Date", options: ["12-FEB-2025", "15-MAR-2025", "20-APR-2025"] },
-                                        { label: "Special Notes About Profile", options: ["None", "Important", "Urgent"] },
-                                        { label: "Customer Service (Matchmaker)", options: ["Assigned", "Unassigned"] },
-                                        { label: "Registered By", options: ["Admin", "User", "Agent"] },
-                                        { label: "Amount & Currency", options: ["$100", "$500", "$1000"] },
-                                    ].map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="px-4 py-2 text-gray-500">{item.label}</td>
-                                            <td className="px-4 py-2">
-                                                {item.options ? (
-                                                    <Select
-                                                        className="text-blue-500 w-full"
-                                                        defaultValue="Click to add"
-                                                        options={item.options.map((option) => ({ label: option, value: option }))}
-                                                    />
-                                                ) : (
-                                                    <span className="text-gray-800 font-medium">{item.value}</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Profile Note", value: "12-FEB-2025 : Match Shared only" },
+                                    { label: "Membership Type", options: ["Active Client", "Premium", "VIP"] },
+                                    { label: "Profile Made By", options: ["Self", "Parents", "Relative"] },
+                                    { label: "Registered On Date", options: ["12-FEB-2025", "15-MAR-2025", "20-APR-2025"] },
+                                    { label: "Special Notes About Profile", options: ["None", "Important", "Urgent"] },
+                                    { label: "Customer Service (Matchmaker)", options: ["Assigned", "Unassigned"] },
+                                    { label: "Registered By", options: ["Admin", "User", "Agent"] },
+                                    { label: "Amount & Currency", options: ["$100", "$500", "$1000"] },
+                                    { label: "Appearance", options: ["Hair-Cut", "Gursikh", "Clean Shaven"] },
+                                    { label: "Verified file", isFileUpload: true },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            {item.options ? (
+                                                <Select
+                                                    className="text-blue-500 w-full"
+                                                    defaultValue="Click to add"
+                                                    options={item.options.map((option) => ({ label: option, value: option }))}
+                                                />
+                                            ) : item.isFileUpload ? (
+                                                <Upload
+                                                    showUploadList={false}
+                                                    beforeUpload={() => false} // Prevent auto-upload
+                                                    onChange={handleUpload}
+                                                    accept="image/*"
+                                                >
+                                                    <Button icon={<UploadOutlined />}>Upload File</Button>
+                                                </Upload>
+                                            ) : (
+                                                <Input className="w-full" defaultValue={item.value} />
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Image Preview */}
+                                {imageUrl && (
+                                    <div className="col-span-2 flex justify-center mt-4">
+                                        <img src={imageUrl} alt="Uploaded" className="w-32 h-32 object-cover rounded-lg border" />
+                                    </div>
+                                )}
+                            </div>
                         </Panel>
 
                         {/* Basic Information Panel */}
                         <Panel header="Basic Information" key="2">
-                            <table className="w-full text-left border-collapse">
-                                <tbody>
-                                    {[
-                                        { label: "Full Name", value: "Lorence Chheena" },
-                                        { label: "Age", value: "28" },
-                                        { label: "Gender", value: "Male" },
-                                        { label: "Marital Status", value: "Single" },
-                                    ].map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="px-4 py-2 text-gray-500">{item.label}</td>
-                                            <td className="px-4 py-2 text-gray-800 font-medium">{item.value}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Gender", options: ["Male", "Female"] },
+                                    { label: "Religion", options: ["Sikh", "Hindu", "Jain"] },
+                                    { label: "Sub Caste", options: ["Jatt", "Arora", "Khatri"] },
+                                    { label: "Birthday(Age)", value: "28 Jan 1996 (29 years)" },
+                                    { label: "Time Of Birth", value: "Add" },
+                                    { label: "Marital Status", options: ["Divorced", "Never Married", "Widowed"] },
+                                    { label: "More about Marital status", value: "Got Married 2018 & legal Divorced 2019 (Living Together 1 Month)" },
+                                    { label: "Vegetarian", options: ["Yes", "No"] },
+                                    { label: "Do you Drink Alcohol?", options: ["Yes", "No"] },
+                                    { label: "Do you smoke?", options: ["Yes", "No"] },
+                                    { label: "Phone Number", value: "123456789" },
+                                    { label: "User code", value: "+61" },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            {item.options ? (
+                                                <Select
+                                                    className="text-blue-500 w-full"
+                                                    defaultValue="Click to add"
+                                                    options={item.options.map((option) => ({ label: option, value: option }))}
+                                                />
+                                            ) : (
+                                                <Input className="w-full" defaultValue={item.value} />
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </Panel>
+
+
 
                         {/* Education & Profession Panel */}
                         <Panel header="Education & Profession" key="3">
-                            <table className="w-full text-left border-collapse">
-                                <tbody>
-                                    {[
-                                        { label: "Highest Qualification", value: "MBA in Finance" },
-                                        { label: "University", value: "University of Toronto" },
-                                        { label: "Occupation", value: "Financial Analyst" },
-                                        { label: "Company", value: "RBC Bank" },
-                                    ].map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="px-4 py-2 text-gray-500">{item.label}</td>
-                                            <td className="px-4 py-2 text-gray-800 font-medium">{item.value}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Name of High School", value: "High School ( India )" },
+                                    { label: "Education", value: "Bachelor of Commerce.Masters in Accounting.Diploma in Financial Services." },
+                                    { label: "Employment", value: "Private Sector" },
+                                    { label: "Income", value: "123456" },
+                                    { label: "Profession", value: "Staff" }
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            <Input className="w-full" defaultValue={item.value} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </Panel>
 
                         {/* Family Details Panel */}
                         <Panel header="Family Details" key="4">
-                            <table className="w-full text-left border-collapse">
-                                <tbody>
-                                    {[
-                                        { label: "Father's Name", value: "Mr. John Chheena" },
-                                        { label: "Mother's Name", value: "Mrs. Chheena" },
-                                        { label: "Siblings", value: "One elder sister" },
-                                        { label: "Family Type", value: "Nuclear Family" },
-                                    ].map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="px-4 py-2 text-gray-500">{item.label}</td>
-                                            <td className="px-4 py-2 text-gray-800 font-medium">{item.value}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Family Affluence Level", value: "Mr. John" },
+                                    { label: "Father's Employment", value: "Retired (Govt Teacher)" },
+                                    { label: "Mother's Employment", value: "Retired" },
+                                    { label: "Father's Name", value: "John" },
+                                    { label: "Mother's Name", value: "Liza" },
+                                    { label: "Other Family Details", value: "1 Elder Brother & 1 Sister Both are Married (Australia) Family Belongs to Amritsar, Punjab, India." },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            <Input className="w-full" defaultValue={item.value} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </Panel>
 
                         {/* Location Details Panel */}
                         <Panel header="Location Details" key="5">
-                            <table className="w-full text-left border-collapse">
-                                <tbody>
-                                    {[
-                                        { label: "Current Location", value: "Brampton, ON, Canada" },
-                                        { label: "Hometown", value: "Vancouver, BC, Canada" },
-                                        { label: "Preferred Locations", value: "Toronto, Calgary, Montreal" },
-                                    ].map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="px-4 py-2 text-gray-500">{item.label}</td>
-                                            <td className="px-4 py-2 text-gray-800 font-medium">{item.value}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Residency Status", value: "Work Permit" },
+                                    { label: "Living in Since (year)", value: "Birthplace India, Living in Australia, Migrated to Australia 2018" },
+                                    { label: "Country Living", value: "Australia" },
+                                    { label: "Country Grew Up In", value: "India" },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            <Input className="w-full" defaultValue={item.value} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Panel>
+
+                        {/* About Me Panel */}
+                        <Panel header="About Me" key="6">
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { label: "Property Details", value: "ABC" },
+                                    { label: "Image", value: "Upload" },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex">
+                                        <div className="w-1/2 px-4 py-2 text-gray-500">{item.label}</div>
+                                        <div className="w-1/2 px-4 py-2">
+                                            {item.label === "Image" ? (
+                                                <Upload
+                                                    showUploadList={false}
+                                                    beforeUpload={() => false} // Prevent auto upload
+                                                    onChange={handleUpload}
+                                                    accept="image/*"
+                                                >
+                                                    <Button icon={<UploadOutlined />}>Upload Image</Button>
+                                                </Upload>
+                                            ) : (
+                                                <Input className="w-full" defaultValue={item.value} />
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Image Preview */}
+                                {imageUrl && (
+                                    <div className="col-span-2 flex justify-center mt-4">
+                                        <img src={imageUrl} alt="Uploaded" className="w-32 h-32 object-cover rounded-lg border" />
+                                    </div>
+                                )}
+                            </div>
                         </Panel>
                     </Collapse>
                 </div>
