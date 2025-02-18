@@ -1,223 +1,227 @@
-import { Form, Input, Button, Select, DatePicker, Row, Col, Card } from "antd";
+import { Form, Input, Button, Select, DatePicker, Row, Col, Card, message } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import apiClient from "../../config/apiClient";
 import logo from "../../components/images/logo.png";
+import schema from "../../schema/customer";
+import { z } from "zod";
 
 const { Option } = Select;
 
-// Validation Schema using Zod
-const schema = z.object({
-    name: z.string().min(2, "Please enter your full name"),
-    email: z.string().email("Enter a valid email"),
-    contactNumber: z.string().min(10, "Enter a valid contact number"),
-    location: z.string().min(2, "Location is required"),
-    country: z.string().min(2, "Country is required"),
-    gender: z.string(),
-    religion: z.string(),
-    birthdate: z.string().nonempty("Select your birthdate"),
-    maritalStatus: z.string(),
-    contactCode: z.string(), // Add the contactCode to the schema
-});
+interface CountryOption {
+    value: string;
+    latlng: [number, number];
+    label: string;
+}
 
-// Define the country codes type and list
-type CountryCode = { code: string; country: string };
-
-const countryCodes: CountryCode[] = [
-    { code: "+91", country: "India" },
-    { code: "+1", country: "USA" },
-    { code: "+44", country: "UK" },
-    { code: "+61", country: "Australia" },
-    { code: "+81", country: "Japan" },
-    { code: "+49", country: "Germany" },
-    { code: "+33", country: "France" },
-    { code: "+34", country: "Spain" },
-    { code: "+1", country: "Canada" },
-    { code: "+86", country: "China" },
-    { code: "+7", country: "Russia" },
-    { code: "+971", country: "UAE" },
-    { code: "+1", country: "Other" }, // Option for other countries
-];
+const fetchCountries = async (): Promise<CountryOption[]> => {
+    try {
+        const response = await fetch("https://restcountries.com/v3.1/all");
+        const data: any[] = await response.json();
+        return data
+            .map((country: { name: { common: string }; cca2: string; latlng?: [number, number] }) => ({
+                value: country.cca2,
+                label: country.name.common,
+                latlng: country.latlng || [0, 0],
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    } catch (error) {
+        message.error("Failed to fetch countries.");
+        return [];
+    }
+};
 
 const ClientSubmissionForm = () => {
+    const [loading, setLoading] = useState(false);
+    const [countries, setCountries] = useState<CountryOption[]>([]);
+
     const {
         handleSubmit,
         control,
+        reset,
+        setValue,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
         mode: "onBlur",
     });
 
-    const onSubmit = (data: any) => {
-        console.log("Form Submitted:", data);
+    useEffect(() => {
+        const loadCountries = async () => {
+            const countryData = await fetchCountries();
+            setCountries(countryData);
+        };
+        loadCountries();
+    }, []);
+
+    const onSubmit = async (data: z.infer<typeof schema>) => {
+        console.log("🚀 Form submitted!", data);
+        setLoading(true);
+        try {
+            await apiClient.post("/customer", data);
+            message.success("Customer registered successfully!");
+            reset();
+        } catch (error) {
+            message.error("Failed to submit form.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="max-w-4xl mx-auto p-8">
-            {/* Logo & Header */}
             <div className="text-center mb-6">
-                <img src={logo} alt="Pehli Rasam Logo" className="w-32 mx-auto mb-3" />
-                <h2 className="text-3xl font-bold" style={{ color: "rgb(164,8,65)" }}>Client Submission Form</h2>
+                <img src={logo} alt="Logo" className="w-32 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-[rgb(174,8,71)]">Client Submission Form</h2>
             </div>
 
-            <Card className="shadow-lg rounded-lg border border-gray-200">
+            <Card className="shadow-lg rounded-xl border border-gray-200 p-6 bg-white">
                 <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-                    {/* Details Section */}
-                    <div className="mb-8">
-                        <h3 className="text-lg font-semibold border-b pb-2 mb-4" style={{ color: "rgb(164,8,65)" }}>Personal Details</h3>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item label="Full Name" validateStatus={errors.name ? "error" : ""} help={errors.name?.message}>
-                                    <Controller name="name" control={control} render={({ field }) => <Input {...field} placeholder="Enter your full name" />} />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item label="Email" validateStatus={errors.email ? "error" : ""} help={errors.email?.message}>
-                                    <Controller name="email" control={control} render={({ field }) => <Input {...field} placeholder="Enter your email" />} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item label="Contact Number" validateStatus={errors.contactNumber ? "error" : ""} help={errors.contactNumber?.message}>
-                                    <Row gutter={8}>
-                                        <Col span={6}>
-                                            <Controller
-                                                name="contactCode"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Select {...field} placeholder="Country Code">
-                                                        {countryCodes.map(({ code, country }) => (
-                                                            <Option key={code} value={code}>{`${country} (${code})`}</Option>
-                                                        ))}
-                                                    </Select>
-                                                )}
-                                            />
-                                        </Col>
-                                        <Col span={18}>
-                                            <Controller
-                                                name="contactNumber"
-                                                control={control}
-                                                render={({ field }) => <Input {...field} placeholder="Enter your contact number" />}
-                                            />
-                                        </Col>
-                                    </Row>
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item label="Location" validateStatus={errors.location ? "error" : ""} help={errors.location?.message}>
-                                    <Controller
-                                        name="location"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Input {...field} placeholder="Enter your location" />
-                                        )}
+                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">Personal Details</h3>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Full Name" validateStatus={errors.name ? "error" : ""} help={errors.name?.message}>
+                                <Controller name="name" control={control} render={({ field }) => <Input {...field} placeholder="Enter your Name" />} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Email" validateStatus={errors.email ? "error" : ""} help={errors.email?.message}>
+                                <Controller name="email" control={control} render={({ field }) => <Input {...field} placeholder="Enter your Email Address" />} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Contact Number">
+                            <Controller
+                                    name="contact"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <PhoneInput
+                                        {...field}
+                                        international
+                                        placeholder="Enter your Contact Number"
+                                        className="ant-input"
+                                        defaultCountry={undefined}
                                     />
-                                </Form.Item>
-                            </Col>
-                        </Row>
+                                    
+                                    )}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Country">
+                                <Controller
+                                    name="countryCode"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            {...field}
+                                            onChange={(value, option: any) => {
+                                                setValue("countryCode", value);
+                                                setValue("latlng", option.latlng);
+                                            }}
+                                            placeholder="Select country code"
+                                        >
+                                            {countries.map(({ value, label, latlng }) => (
+                                                <Option key={value} value={value} latlng={latlng}>
+                                                    {label} ({value})
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    )}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item label="Location">
+                        <Controller name="location" control={control} render={({ field }) => <Input {...field} placeholder="Enter your Lcation" />} />
+                    </Form.Item>
 
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item label="Country" validateStatus={errors.country ? "error" : ""} help={errors.country?.message}>
-                                    <Controller
-                                        name="country"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} placeholder="Select country">
-                                                {countryCodes.map(({ country }) => (
-                                                    <Option key={country} value={country}>{country}</Option>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </div>
+                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mt-6 mb-4">Basic Information</h3>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Gender">
+                                <Controller name="gender" control={control} render={({ field }) => (
+                                    <Select {...field} placeholder="Select your Gender">
+                                        <Option value="Male">Male</Option>
+                                        <Option value="Female">Female</Option>
+                                    </Select>
+                                )} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Religion">
+                                <Controller name="religion" control={control} render={({ field }) => (
+                                    <Select {...field} placeholder="Select your Religion">
+                                        <Option value="Sikh">Sikh</Option>
+                                        <Option value="Hindu">Hindu</Option>
+                                        <Option value="Jain">Jain</Option>
+                                        <Option value="Muslim">Muslim</Option>
+                                        <Option value="Christian">Christian</Option>
+                                    </Select>
+                                )} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Marital Status" validateStatus={errors.maritalStatus ? "error" : ""} help={errors.maritalStatus?.message}>
+                                <Controller name="maritalStatus" control={control} render={({ field }) => (
+                                    <Select {...field} placeholder="Select marital status">
+                                        {[
+                                            "Never Married",
+                                            "Divorced",
+                                            "Windowed",
+                                            "Separated",
+                                            "Annulled",
+                                            "Divorced(1 child , Living Together)",
+                                            "Divorced(2 children , Living Together)",
+                                            "Divorced(3 children , Living Together)",
+                                            "Awaiting Divorce",
+                                            "Widowed(1 child , Living Together)",
+                                            "Divorced(Without child)",
+                                        ].map(maritalStatus => (
+                                            <Option key={maritalStatus} value={maritalStatus}>{maritalStatus}</Option>
+                                        ))}
+                                    </Select>
+                                )} />
 
-                    {/* Basic Information Section */}
-                    <div>
-                        <h3 className="text-lg font-semibold border-b pb-2 mb-4" style={{ color: "rgb(164,8,65)" }}>Basic Information</h3>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Birthdate" validateStatus={errors.birthdate ? "error" : ""} help={errors.birthdate?.message}>
+                                <Controller
+                                    name="birthdate"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            {...field}
+                                            className="w-full"
+                                            format="YYYY-MM-DD"
+                                            placeholder="Select birthdate"
+                                            value={field.value ? dayjs(field.value) : null}
+                                            onChange={(date) => field.onChange(date ? date.toDate() : null)}
+                                        />
+                                    )}
+                                />
 
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item label="Gender" validateStatus={errors.gender ? "error" : ""} help={errors.gender?.message}>
-                                    <Controller
-                                        name="gender"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} placeholder="Select gender">
-                                                <Option value="Male">Male</Option>
-                                                <Option value="Female">Female</Option>
-                                                <Option value="Other">Other</Option>
-                                            </Select>
-                                        )}
-                                    />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item label="Religion" validateStatus={errors.religion ? "error" : ""} help={errors.religion?.message}>
-                                    <Controller
-                                        name="religion"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} placeholder="Select religion">
-                                                <Option value="Sikh">Sikh</Option>
-                                                <Option value="Hindu">Hindu</Option>
-                                                <Option value="Muslim">Muslim</Option>
-                                                <Option value="Christian">Christian</Option>
-                                                <Option value="Jain">Jain</Option>
-                                            </Select>
-                                        )}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item label="Birthdate" validateStatus={errors.birthdate ? "error" : ""} help={errors.birthdate?.message}>
-                                    <Controller
-                                        name="birthdate"
-                                        control={control}
-                                        render={({ field }) => <DatePicker {...field} className="w-full" format="DD-MM-YYYY" placeholder="Select birthdate" />}
-                                    />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item label="Marital Status" validateStatus={errors.maritalStatus ? "error" : ""} help={errors.maritalStatus?.message}>
-                                    <Controller
-                                        name="maritalStatus"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} placeholder="Select marital status">
-                                                <Option value="Single">Single</Option>
-                                                <Option value="Married">Married</Option>
-                                                <Option value="Divorced">Divorced</Option>
-                                                <Option value="Widowed">Widowed</Option>
-                                            </Select>
-                                        )}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </div>
-
-                    {/* Submit Button */}
-                    <Form.Item className="mt-6">
-                        <div className="flex justify-center">
-                            <Button
-                                type="primary"
-                                htmlType="submit"
-                                className="text-lg font-medium w-2/5"
-                                style={{ backgroundColor: "rgb(164,8,65)", borderColor: "rgb(164,8,65)" }}
-                            >
-                                Submit Application
-                            </Button>
-                        </div>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item className="flex justify-center">
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={loading}
+                            className="!bg-[rgb(174,8,71)] !border-none !hover:bg-[rgb(174,8,71)] !focus:bg-[rgb(174,8,71)] !active:bg-[rgb(174,8,71)]"
+                        >
+                            Submit Application
+                        </Button>
                     </Form.Item>
                 </Form>
             </Card>
