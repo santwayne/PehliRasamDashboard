@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input, Button, Select, Dropdown, Menu, Card, Avatar, Modal } from "antd";
 import { SearchOutlined, AppstoreOutlined, UserAddOutlined, DownOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import apilient from "../../config/apiClient";
 
 const { Option } = Select;
 
@@ -104,13 +105,11 @@ const Clients: React.FC = () => {
             {/* Content */}
             <div className="w-2/3 space-y-2">
               <p className="text-gray-600"><strong>📍 Location:</strong> {selectedClient.location}</p>
-              <p className="text-gray-600"><strong>🟢 Status:</strong> {selectedClient.status}</p>
               <p className="text-gray-600"><strong>💳 Membership:</strong> {selectedClient.membership}</p>
               <p className="text-gray-600"><strong>📧 Email:</strong> {selectedClient.email}</p>
               <p className="text-gray-600"><strong>📞 Phone:</strong> {selectedClient.phone}</p>
-              <p className="text-gray-600"><strong>📂 Submitted:</strong> {selectedClient.submitted}</p>
               <p className="text-gray-600"><strong>📅 Created:</strong> {selectedClient.created}</p>
-              <a href={`/profile/${selectedClient.id}`} className="text-blue-600 hover:underline">🔗 Click for Profile</a>
+              <a href={`/dashboard/add-client`} className="text-blue-600 hover:underline">🔗 Click for Profile</a>
             </div>
           </div>
         )}
