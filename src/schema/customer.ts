@@ -9,7 +9,7 @@ const schema = z.object({
     location: z.string().min(3, "Location is required"),
     latlng: z.tuple([z.number(), z.number()]),
     gender: z.enum(["Male", "Female"], { errorMap: () => ({ message: "Select your gender" }) }),
-    birthdate: z.date(),
+    birthDate: z.date(),
     maritalStatus: z.enum([
         "Never Married",
         "Divorced",
@@ -96,7 +96,7 @@ const schema = z.object({
     countryLiving: z.string().optional(),
     countryGrewUpIn: z.string().optional(),
     propertyDetails: z.string().optional(),
-    imgURL: z.array(z.string().url("Invalid image URL")),
+    imgURL: z.array(z.string().url("Invalid image URL")).optional(),
 
 
     moreAboutPartnerPreference: z.string().optional(),

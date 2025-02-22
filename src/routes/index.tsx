@@ -7,12 +7,15 @@ const Overview = lazy(() => import("../pages/overview"));
 const Clients = lazy(() => import("../pages/clients"));
 const AddClient = lazy(() => import("../pages/clients/AddClient"));
 const ClientForm = lazy(() => import("../pages/clientsForm"));
+const ClientSuggestions = lazy(() => import("../pages/clientsForm/Suggestions"));
+
 
 const AppRoutes = () => {
     return (
         <Suspense fallback={<Loader />}>
             <Routes>
                 <Route path="/submissionform" element={<ClientForm />} />
+                <Route path="/suggestions" element={<ClientSuggestions />} />
                 {/* <Route path="/auth/login" element={<Login />} /> */}
                 <Route path="/" element={<Navigate to="/dashboard/overview" />} />
 
