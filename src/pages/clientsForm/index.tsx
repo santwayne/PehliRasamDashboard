@@ -107,13 +107,11 @@ const ClientSubmissionForm = () => {
     };
 
     const onSubmit = async (values: any) => {
-        // Enforce at least one image is uploaded
         if (fileList.length === 0) {
             message.error("Please upload at least one image.");
             return;
         }
 
-        console.log("Form values:", values);
         setLoading(true);
         try {
             let imgUrls: string[] = [];
@@ -133,22 +131,30 @@ const ClientSubmissionForm = () => {
                 imgUrls = res.data.data.urls;
             }
 
-            await apiClient.post("/customer", { ...values, imgURL: imgUrls });
-            message.success("Client added successfully!");
+            const response = await apiClient.post("/customer", { ...values, imgURL: imgUrls });
+
+            message.success(response.data.message);
+
+            localStorage.setItem("isRegistered", "true");
+            localStorage.setItem("registeredGender", values.preferredGender);
+
             reset();
             setFileList([]);
 
-            // Navigate to /suggestions after a 3.5-second delay
             setTimeout(() => {
-                navigate("/suggestions");
+                navigate(`/suggestions`);
             }, 2000);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving client:", error);
-            message.error("Error saving client.");
+
+            const errorMessage = error.response?.data?.message || "Error saving client.";
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }
     };
+
+
 
 
     return (
@@ -324,17 +330,16 @@ const ClientSubmissionForm = () => {
                                     render={({ field }) => (
                                         <Select
                                             {...field}
-                                            placeholder="Select your Religion"
+                                            placeholder="Select Religion"
                                             onChange={(value) => field.onChange(value)}
                                         >
-                                            <Option value="Sikh">Sikh</Option>
-                                            <Option value="Hindu">Hindu</Option>
-                                            <Option value="Jain">Jain</Option>
-                                            <Option value="Muslim">Muslim</Option>
-                                            <Option value="Christian">Christian</Option>
-                                            <Option value="Buddhist">Buddhist</Option>
-                                            <Option value="Spiritual">Spiritual</Option>
-                                            <Option value="Other">Other</Option>
+                                            {[
+                                                'Sikh', 'Hindu', 'Jain', 'Buddhist', 'Spiritual', 'Muslim', 'Christain', 'Other'
+                                            ].map((religion) => (
+                                                <Option key={religion} value={religion}>
+                                                    {religion}
+                                                </Option>
+                                            ))}
                                         </Select>
                                     )}
                                 />
@@ -645,17 +650,17 @@ const ClientSubmissionForm = () => {
                                             onChange={onChange}
                                             value={value}
                                         >
-                                            <Option value="Sikh">Sikh</Option>
-                                            <Option value="Hindu">Hindu</Option>
-                                            <Option value="Jain">Jain</Option>
-                                            <Option value="Muslim">Muslim</Option>
-                                            <Option value="Christian">Christian</Option>
-                                            <Option value="Buddhist">Buddhist</Option>
-                                            <Option value="Spiritual">Spiritual</Option>
-                                            <Option value="Not Matter">Not Matter</Option>
+                                            {[
+                                                'Sikh', 'Hindu', 'Jain', 'Buddhist', 'Spiritual', 'Muslim', 'Christain', 'Other'
+                                            ].map((preferredReligion) => (
+                                                <Option key={preferredReligion} value={preferredReligion}>
+                                                    {preferredReligion}
+                                                </Option>
+                                            ))}
                                         </Select>
                                     )}
                                 />
+
                             </Form.Item>
                         </Col>
                     </Row>
