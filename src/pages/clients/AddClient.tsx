@@ -48,21 +48,25 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
         countryLiving: "",
         countryGrewUpIn: "",
         propertyDetails: "",
-        verifiedFile: null, // Added verifiedFile field
     });
 
     // Fetch client data if updating
     useEffect(() => {
         if (clientId) {
             setLoading(true);
-            getClient(clientId)
-                .then((data) => {
-                    setFormData(data);
-                    setLoading(false);
+            getClient(Number(clientId), 1)
+                .then((response) => {
+                    const clientData = response?.data ?? {};
+                    setFormData((prevData) => ({
+                        ...prevData,
+                        ...clientData, 
+                    }));
                 })
-                .catch(() => setLoading(false));
+                .catch(() => message.error("Failed to fetch client details"))
+                .finally(() => setLoading(false));
         }
     }, [clientId]);
+    
 
     const handleSave = async () => {
         setLoading(true);

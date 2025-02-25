@@ -25,9 +25,9 @@ const Form = ({ formData, setFormData }: MembershipFormProps) => {
 
     return (
         <Collapse className="mt-4 border border-gray-200 rounded-md" expandIconPosition="right" defaultActiveKey={["1"]}>
-             <Panel header="Membership Information" key="1">
+            <Panel header="Membership Information" key="1">
                 <div className="grid grid-cols-2 gap-4">
-                    {[        
+                    {[
                         { label: "Profile Note", value: "12-FEB-2025 : Match Shared only" },
                         { label: "Membership Type", options: ["Active Client", "Premium", "VIP"] },
                         { label: "Profile Made By", options: ["Self", "Parents", "Relative"] },
