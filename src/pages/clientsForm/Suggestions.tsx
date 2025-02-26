@@ -457,7 +457,7 @@ const Suggestions = () => {
                     </div>
 
                     {/* Payment Call-to-Action Button */}
-                    <Link to="/payment">
+                    <Link to="https://pehlirasam.exlyapp.com/checkout/34a4a2b0-e647-4037-bc18-59d2a6923531">
                         <Button type="primary" size="large" className="px-5 py-2 rounded-md shadow-md">
                             Interested? Complete Payment 💍
                         </Button>
@@ -492,9 +492,11 @@ const Suggestions = () => {
                                 <p className="text-gray-500 text-xs">📍 {person.country}</p>
 
                                 {/* Unlock Button - Styled */}
-                                <Button className="mt-3 px-5 py-2 rounded-md shadow-md text-xs font-medium">
-                                    Unlock
-                                </Button>
+                                <Link to="https://pehlirasam.exlyapp.com/checkout/34a4a2b0-e647-4037-bc18-59d2a6923531">
+                                    <Button className="mt-3 px-5 py-2 rounded-md shadow-md text-xs font-medium">
+                                        Unlock
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </Card>
