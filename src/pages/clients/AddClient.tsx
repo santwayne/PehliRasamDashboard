@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MembershipForm from "./Form";
@@ -70,7 +69,7 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
                 <Header />
 
                 <div className="pl-[0%] flex-1 bg-gray-100 h-screen p-6">
-                    {/* Membership Form is ALWAYS ACTIVE */}
+                    {/* ✅ Membership Form is always visible on `/dashboard/add-client` */}
                     <MembershipForm
                         clientId={clientId}
                         formData={formData}
@@ -78,9 +77,6 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
                         setLoading={setLoading}
                         loading={loading}
                     />
-
-                    {/* This dynamically loads sections (Timeline, Matching, etc.) below */}
-                    <Outlet />
                 </div>
             </div>
         </div>
