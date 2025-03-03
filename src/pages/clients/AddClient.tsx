@@ -52,6 +52,9 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<ICustomer>({ ...defaultClientData });
 
+
+    const showMembershipForm = location.pathname === "/dashboard/add-client";
+
     useEffect(() => {
         if (clientId) {
             setLoading(true);
@@ -66,17 +69,19 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
         <div className="flex h-screen bg-gray-100">
             <Sidebar />
             <div className="pl-[27%] flex-1 overflow-y-auto">
-                <Header />
+                <Header activeTab={location.pathname} />
 
                 <div className="pl-[0%] flex-1 bg-gray-100 h-screen p-6">
                     {/* ✅ Membership Form is always visible on `/dashboard/add-client` */}
-                    <MembershipForm
+                
+                      {showMembershipForm &&     <MembershipForm
                         clientId={clientId}
                         formData={formData}
                         setFormData={setFormData}
                         setLoading={setLoading}
                         loading={loading}
-                    />
+                    />}
+                      <Outlet />
                 </div>
             </div>
         </div>
