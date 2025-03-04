@@ -7,16 +7,11 @@ const Header: React.FC = () => {
 
     const topTabs = [
         { name: "Timeline", path: "/dashboard/add-client/timeline" },
-        { name: "Profile", path: "/dashboard/add-client" }, 
+        { name: "Profile", path: "/dashboard/add-client" },
         { name: "Matching", path: "/dashboard/add-client/matching" },
         { name: "Photos", path: "/dashboard/add-client/photos" },
         { name: "Events", path: "/dashboard/add-client/events" },
-    ];
-    
-
-    const bottomTabs = [
-        "Communication", "Videos", "Finances", "Files",
-        "Reminders", "Tasks", "Surveys", "Notes"
+        { name: "Communication", path: "/dashboard/add-client/communication" }
     ];
 
     return (
@@ -26,24 +21,11 @@ const Header: React.FC = () => {
                 {topTabs.map((tab) => (
                     <div
                         key={tab.name}
-                        className={`cursor-pointer transition ${
-                            location.pathname === tab.path ? "text-blue-600 underline font-bold" : "hover:text-blue-600"
-                        }`}
+                        className={`cursor-pointer transition ${location.pathname === tab.path ? "text-blue-600 underline font-bold" : "hover:text-blue-600"
+                            }`}
                         onClick={() => navigate(tab.path)}
                     >
                         {tab.name}
-                    </div>
-                ))}
-            </div>
-
-            {/* Bottom Row */}
-            <div className="flex gap-6 text-gray-700 font-semibold mt-4">
-                {bottomTabs.map((tab) => (
-                    <div
-                        key={tab}
-                        className="cursor-pointer hover:text-blue-600"
-                    >
-                        {tab}
                     </div>
                 ))}
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MembershipForm from "./Form";
@@ -48,11 +49,13 @@ const defaultClientData: ICustomer = {
     propertyDetails: "",
 };
 
+
+
 const AddClient = ({ clientId }: { clientId?: string }) => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<ICustomer>({ ...defaultClientData });
 
-
+    const location = useLocation();
     const showMembershipForm = location.pathname === "/dashboard/add-client";
 
     useEffect(() => {
@@ -69,20 +72,23 @@ const AddClient = ({ clientId }: { clientId?: string }) => {
         <div className="flex h-screen bg-gray-100">
             <Sidebar />
             <div className="pl-[27%] flex-1 overflow-y-auto">
-                <Header activeTab={location.pathname} />
+                <Header />
 
                 <div className="pl-[0%] flex-1 bg-gray-100 h-screen p-6">
-                    {/* ✅ Membership Form is always visible on `/dashboard/add-client` */}
-                
-                      {showMembershipForm &&     <MembershipForm
-                        clientId={clientId}
-                        formData={formData}
-                        setFormData={setFormData}
-                        setLoading={setLoading}
-                        loading={loading}
-                    />}
-                      <Outlet />
+                    {/* ✅ Show Membership Form only if it's the add-client route */}
+                    {showMembershipForm ? (
+                        <MembershipForm
+                            clientId={clientId}
+                            formData={formData}
+                            setFormData={setFormData}
+                            setLoading={setLoading}
+                            loading={loading}
+                        />
+                    ) : (
+                        <Outlet />
+                    )}
                 </div>
+
             </div>
         </div>
     );

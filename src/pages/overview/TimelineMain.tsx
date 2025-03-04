@@ -22,7 +22,7 @@ const data = [
   { date: "21 Jan", value: 8 },
 ];
 
-const index = () => {
+const TimelineMain = () => {
   const timelineData = [
     {
       time: "9:52 PM",
@@ -114,4 +114,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default TimelineMain;

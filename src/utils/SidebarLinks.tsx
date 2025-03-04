@@ -1,7 +1,6 @@
 import { BiUser } from "react-icons/bi";
 import { IoMdHome } from "react-icons/io";
 import { MdMessage, MdSettings } from "react-icons/md";
-import { FaFolder } from "react-icons/fa";
 
 type SidebarLink = {
   key: string;
@@ -17,8 +16,7 @@ export const sidebarLinks: SidebarLink[] = [
     label: "Dashboard",
     children: [
       { key: "/dashboard/overview", icon: null, label: "Overview" },
-      { key: "/dashboard/timeline", icon: null, label: "Timeline" },
-      { key: "/dashboard/notes", icon: null, label: "Notes" },
+      { key: "/dashboard/timelinemain", icon: null, label: "Timeline" },
       { key: "/dashboard/profile-update", icon: null, label: "Profile Update" },
 
     ],
@@ -33,14 +31,9 @@ export const sidebarLinks: SidebarLink[] = [
     icon: <MdMessage />,
     label: "Communication",
     children: [
-      { key: "/dashboard/communication/inbox", icon: null, label: "Email Inbox" },
-      { key: "/dashboard/communication/sent", icon: null, label: "Email Sent" },
+      { key: "/dashboard/inbox", icon: null, label: "Email Inbox" },
+      { key: "/dashboard/sent", icon: null, label: "Email Sent" },
     ],
-  },
-  {
-    key: "/dashboard/files",
-    icon: <FaFolder />,
-    label: "Files",
   },
   {
     key: "/dashboard/settings",

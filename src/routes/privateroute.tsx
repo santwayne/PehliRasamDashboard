@@ -14,7 +14,7 @@ const Timeline = lazy(() => import("../pages/clients/timeline"));
 
 
 const isAuthenticated = () => {
-    return localStorage.getItem("token") !== null; 
+    return localStorage.getItem("token") !== null;
 };
 
 
