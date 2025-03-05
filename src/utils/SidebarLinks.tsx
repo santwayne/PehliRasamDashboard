@@ -36,8 +36,22 @@ export const sidebarLinks: SidebarLink[] = [
     ],
   },
   {
-    key: "/dashboard/settings",
+    key: "settings",
     icon: <MdSettings />,
     label: "Settings",
-  },
+    children: [
+      {
+        key: "clients",
+        icon: null,
+        label: "Clients",
+        children: [
+          { key: "/dashboard/clients/lists", icon: null, label: "Lists" },
+          { key: "/dashboard/clients/fields", icon: null, label: "Fields" },
+        ],
+      },
+      { key: "/dashboard/users", icon: null, label: "Users" },
+      { key: "/dashboard/admin-info", icon: null, label: "Admin Info" },
+    ],
+  }
+
 ];
