@@ -24,11 +24,10 @@ const index = () => {
         ].map((tab) => (
           <button
             key={tab.name}
-            className={`flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition ${
-              activeTab === tab.name.toLowerCase()
+            className={`flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition ${activeTab === tab.name.toLowerCase()
                 ? "bg-blue-500 text-white"
                 : "text-gray-600 hover:bg-gray-200"
-            }`}
+              }`}
             onClick={() => setActiveTab(tab.name.toLowerCase())}
           >
             {tab.icon} {tab.name}

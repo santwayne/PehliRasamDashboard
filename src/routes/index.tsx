@@ -21,6 +21,8 @@ const Communication = lazy(() => import("../pages/clients/communication"));
 const Inbox = lazy(() => import("../pages/communication/Inbox"));
 const Sent = lazy(() => import("../pages/communication/Sent"));
 
+const Fields = lazy(() => import("../pages/settings/client-settings/Fields"));
+
 const AppRoutes = () => {
     return (
         <Suspense fallback={<Loader />}>
@@ -35,7 +37,7 @@ const AppRoutes = () => {
                     <Route path="overview" element={<Overview />} />
                     <Route path="timelinemain" element={<TimelineMain />} />
                     <Route path="profile-update" element={<ProfileUpdate />} />
-                   
+
 
                     <Route path="clients" element={<Clients />} />
 
@@ -53,6 +55,8 @@ const AppRoutes = () => {
                     </Route>
                     <Route path="inbox" element={<Inbox />} />
                     <Route path="sent" element={<Sent />} />
+
+                    <Route path="fields" element={<Fields />} />
                 </Route>
             </Routes>
         </Suspense>

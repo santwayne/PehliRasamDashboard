@@ -1,49 +1,11 @@
-import { ICustomer } from './clientTypes';
-import apiClient from "../../config/apiClient";
+import axios from "axios";
 
-export const getClient = async (page: number, limit: number) => {
+export const getCustomerProfile = async (customerId: string) => {
     try {
-        const response = await apiClient.get(`/customer?page=${page}&limit=${limit}`);
-        return response.data.data;
+        const response = await axios.get(`http://localhost:8098/api/v1/admin/customerProfile?customerId=${customerId}`);
+        return response.data;
     } catch (error) {
-        console.error("Error Fetching Clients:", error);
-        return { data: [], total: 0 };
+        console.error("Error fetching customer profile:", error);
+        throw error;
     }
 };
-
-export const addClient = async (clientData: Partial<ICustomer>) => {
-    try {
-        await apiClient.post('/customer', clientData);
-    } catch (error) {
-        console.error("Error Creating Client:", error);
-    }
-};
-
-export const updateClient = async (id: string, clientData: Partial<ICustomer>) => {
-    try {
-        await apiClient.put(`/customer/${id}`, clientData);
-    } catch (error) {
-        console.error("Error Updating Client:", error);
-    }
-};
-
-export const deleteClient = async (id: string) => {
-    try {
-        await apiClient.delete(`/customer/${id}`);
-    } catch (error) {
-        console.error("Error Deleting Client:", error);
-    }
-};
-
-
-export const getClientById = async (id: string): Promise<ICustomer> => {
-    try {
-        const response = await apiClient.get(`/customer/${id}`);
-        return response.data.data;
-    } catch (error: any) {
-        console.error("Error Fetching Client by ID:", error?.message || error);
-        throw new Error("Failed to fetch client by ID");
-    }
-};
-
-

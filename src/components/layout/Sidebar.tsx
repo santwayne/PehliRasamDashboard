@@ -1,15 +1,24 @@
+import { useState } from "react";
 import { Menu, Layout } from "antd";
 import { sidebarLinks } from "../../utils/SidebarLinks";
 import { useNavigate } from "react-router-dom";
+import { MdSettings } from "react-icons/md";
+
+const { Sider } = Layout;
+const { SubMenu } = Menu;
 
 type SidebarProps = {
   collapsed: boolean;
 };
 
-const { Sider } = Layout;
-
 const Sidebar = ({ collapsed }: SidebarProps) => {
   const navigate = useNavigate();
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+
+  // Handle submenu toggle
+  const handleOpenChange = (keys: string[]) => {
+    setOpenKeys(keys);
+  };
 
   return (
     <Sider
@@ -33,6 +42,8 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       <Menu
         mode="inline"
         defaultSelectedKeys={["/dashboard"]}
+        openKeys={openKeys}
+        onOpenChange={handleOpenChange}
         onClick={(e) => navigate(e.key)}
         style={{
           fontSize: "16px",
@@ -42,38 +53,22 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       >
         {sidebarLinks.map((link) =>
           link.children ? (
-            <Menu.SubMenu
-              key={link.key}
-              icon={link.icon}
-              title={!collapsed && link.label}
-              style={{ marginBottom: 5 }}
-            >
-              {link.children.map((child) => (
-                <Menu.Item
-                  key={child.key}
-                  style={{
-                    fontSize: "15px",
-                    paddingLeft: collapsed ? "16px" : "30px",
-                    transition: "all 0.3s ease-in-out",
-                  }}
-                >
-                  {child.label}
-                </Menu.Item>
-              ))}
-            </Menu.SubMenu>
+            <SubMenu key={link.key} icon={link.icon || <MdSettings />} title={link.label}>
+              {link.children.map((child) =>
+                child.children ? (
+                  <SubMenu key={child.key} title={child.label} icon={child.icon}>
+                    {child.children.map((subChild) => (
+                      <Menu.Item key={subChild.key}>{subChild.label}</Menu.Item>
+                    ))}
+                  </SubMenu>
+                ) : (
+                  <Menu.Item key={child.key}>{child.label}</Menu.Item>
+                )
+              )}
+            </SubMenu>
           ) : (
-            <Menu.Item
-              key={link.key}
-              icon={link.icon}
-              style={{
-                fontSize: "16px",
-                padding: "14px",
-                transition: "all 0.3s",
-                borderRadius: "4px",
-                margin: "5px 10px",
-              }}
-            >
-              {!collapsed && link.label}
+            <Menu.Item key={link.key} icon={link.icon}>
+              {link.label}
             </Menu.Item>
           )
         )}

@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { FaTrash, FaEnvelopeOpenText } from "react-icons/fa";
 import { Button } from "antd";
 
@@ -76,11 +76,10 @@ const Inbox = () => {
                   <td className="p-3">{email.date}</td>
                   <td className="p-3">
                     <span
-                      className={`px-2 py-1 rounded-md text-sm font-medium ${
-                        email.status === "Unread"
+                      className={`px-2 py-1 rounded-md text-sm font-medium ${email.status === "Unread"
                           ? "bg-blue-100 text-blue-600"
                           : "bg-gray-100 text-gray-600"
-                      }`}
+                        }`}
                     >
                       {email.status}
                     </span>

@@ -24,7 +24,7 @@ const index = () => {
         const newImages = selectedImages.map((file) =>
             URL.createObjectURL(file)
         );
-        setImages((prev) => [...prev, ...newImages].slice(0, 10)); // Max 10 images
+        setImages((prev) => [...prev, ...newImages].slice(0, 10));
         setIsModalOpen(false);
         setSelectedImages([]);
     };
