@@ -7,7 +7,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import apiClient from "../../config/apiClient";
 import logo from "../../components/images/logo.png";
-import schema from "../../schema/customernew";
+import schema from "../../schema/customer";
 import { UploadOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { UploadFile } from "antd/es/upload/interface";
@@ -41,7 +41,20 @@ const fetchCountries = async (): Promise<CountryOption[]> => {
     }
 };
 
+const generateHeightOptions = () => {
+    const options = [];
+    for (let inches = 48; inches <= 96; inches++) {
+        const feet = Math.floor(inches / 12);
+        const remainingInches = inches % 12;
+        options.push({
+            value: inches,
+            label: `${feet}'${remainingInches}"`,
+        });
+    }
+    return options;
+};
 
+const heightOptions = generateHeightOptions();
 
 
 const ClientSubmissionForm = () => {
@@ -49,44 +62,18 @@ const ClientSubmissionForm = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [countries, setCountries] = useState<CountryOption[]>([]);
-
     const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-    const handleChange = ({ fileList }: { fileList: UploadFile[] }) => setFileList(fileList);
-
-
-    const { control, handleSubmit, formState: { errors } } = useForm({
+    const {
+        handleSubmit,
+        control,
+        reset,
+        setValue,
+        formState: { errors },
+    } = useForm({
         resolver: zodResolver(schema),
-        defaultValues: {
-            personalDetails: {
-                fullName: "",
-                email: "",
-                contactNumber: "",
-                country: "",
-                location: "",
-            },
-            basicInformation: {
-                gender: undefined,
-                birthdate: "",
-                height: "",
-            },
-            educationProfession: {
-                employment: "",
-                education: "",
-            },
-            familyDetails: {
-                fatherName: "",
-                motherName: "",
-            },
-            matchPreferences: {
-                preferredGender: undefined,
-                preferredAgeRange: { min: 18, max: 100 },
-                vegetarianPreference: false,
-                drinkAlcohol: false,
-            },
-        },
+        mode: "onBlur",
     });
-
 
     useEffect(() => {
         const loadCountries = async () => {
@@ -96,12 +83,30 @@ const ClientSubmissionForm = () => {
         loadCountries();
     }, []);
 
+    const handleImageUpload = ({ fileList }: { fileList: UploadFile[] }) => {
+        if (fileList.length > 5) {
+            message.error("You can only upload a maximum of 5 images.");
+            return;
+        }
+        setFileList(fileList);
+    };
 
-
-
+    const getBase64 = (file: File) => {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                if (reader.result) {
+                    resolve(reader.result.toString().split(",")[1]);
+                } else {
+                    reject("Failed to convert file to base64.");
+                }
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
 
     const onSubmit = async (values: any) => {
-        console.log(values, 'values')
         if (fileList.length === 0) {
             message.error("Please upload at least one image.");
             return;
@@ -109,20 +114,31 @@ const ClientSubmissionForm = () => {
 
         setLoading(true);
         try {
+            let imgUrls: string[] = [];
+            if (fileList.length > 0) {
+                const imagesData = await Promise.all(
+                    fileList.map(async (file, index) => ({
+                        base64: await getBase64(file.originFileObj as File),
+                        filename: `image_${index}.jpg`,
+                        format: file.type?.split("/")[1],
+                    }))
+                );
 
+                const res = await apiClient.post("/customer/upload-image", {
+                    clientName: values.name,
+                    images: imagesData,
+                });
+                imgUrls = res.data.data.urls;
+            }
 
-            const formData = new FormData();
-            fileList.forEach((file) => formData.append("images", file.originFileObj as Blob));
-
-            const response = await apiClient.post("/user/register", { ...values, images: formData });
-
+            const response = await apiClient.post("/customer", { ...values, imgURL: imgUrls });
 
             message.success(response.data.message);
 
             localStorage.setItem("isRegistered", "true");
             localStorage.setItem("registeredGender", values.preferredGender);
 
-
+            reset();
             setFileList([]);
 
             setTimeout(() => {
@@ -139,7 +155,7 @@ const ClientSubmissionForm = () => {
     };
 
 
-    console.log(errors, 'errors')
+
 
     return (
         <div className="max-w-4xl mx-auto p-8">
@@ -160,19 +176,19 @@ const ClientSubmissionForm = () => {
                                         Full Name <span style={{ color: "red" }}>*</span>
                                     </>
                                 }
-                                validateStatus={errors.personalDetails?.fullName ? "error" : ""}
-                                help={errors.personalDetails?.fullName?.message}
+                                validateStatus={errors.name ? "error" : ""}
+                                help={errors.name?.message}
                             >
                                 <Controller
-                                    name="personalDetails.fullName"
+                                    name="name"
                                     control={control}
+                                    rules={{ required: "Full Name is required" }}
                                     render={({ field }) => (
                                         <Input {...field} placeholder="Enter your Name" />
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
                         <Col span={12}>
                             <Form.Item
                                 label={
@@ -180,12 +196,13 @@ const ClientSubmissionForm = () => {
                                         Email <span style={{ color: "red" }}>*</span>
                                     </>
                                 }
-                                validateStatus={errors.personalDetails?.email ? "error" : ""}
-                                help={errors.personalDetails?.email?.message}
+                                validateStatus={errors.email ? "error" : ""}
+                                help={errors.email?.message}
                             >
                                 <Controller
-                                    name="personalDetails.email"
+                                    name="email"
                                     control={control}
+                                    rules={{ required: "Email is required" }}
                                     render={({ field }) => (
                                         <Input {...field} placeholder="Enter your Email Address" />
                                     )}
@@ -193,7 +210,6 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
@@ -202,11 +218,11 @@ const ClientSubmissionForm = () => {
                                         Contact Number <span style={{ color: "red" }}>*</span>
                                     </>
                                 }
-                                validateStatus={errors.personalDetails?.contactNumber ? "error" : ""}
-                                help={errors.personalDetails?.contactNumber?.message}
+                                validateStatus={errors.contact ? "error" : ""}
+                                help={errors.contact?.message}
                             >
                                 <Controller
-                                    name="personalDetails.contactNumber"
+                                    name="contact"
                                     control={control}
                                     rules={{ required: "Contact Number is required" }}
                                     render={({ field: { onChange, value } }) => (
@@ -222,7 +238,6 @@ const ClientSubmissionForm = () => {
                                 />
                             </Form.Item>
                         </Col>
-
                         <Col span={12}>
                             <Form.Item
                                 label={
@@ -230,21 +245,24 @@ const ClientSubmissionForm = () => {
                                         Country <span style={{ color: "red" }}>*</span>
                                     </>
                                 }
-                                validateStatus={errors.personalDetails?.country ? "error" : ""}
-                                help={errors.personalDetails?.country?.message}
+                                validateStatus={errors.countryCode ? "error" : ""}
+                                help={errors.countryCode?.message}
                             >
                                 <Controller
-                                    name="personalDetails.country"
+                                    name="countryCode"
                                     control={control}
                                     rules={{ required: "Country is required" }}
                                     render={({ field }) => (
                                         <Select
                                             {...field}
-                                            onChange={(value) => field.onChange(value)}
-                                            placeholder="Select country"
+                                            onChange={(value, option: any) => {
+                                                field.onChange(value);
+                                                setValue("latlng", option.latlng);
+                                            }}
+                                            placeholder="Select country code"
                                         >
-                                            {countries.map(({ value, label }) => (
-                                                <Option key={value} value={value}>
+                                            {countries.map(({ value, label, latlng }) => (
+                                                <Option key={value} value={value} latlng={latlng}>
                                                     {label} ({value})
                                                 </Option>
                                             ))}
@@ -254,19 +272,17 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-
-
                     <Form.Item
                         label={
                             <>
                                 Location/ Town City/ Village <span style={{ color: "red" }}>*</span>
                             </>
                         }
-                        validateStatus={errors.personalDetails?.location ? "error" : ""}
-                        help={errors.personalDetails?.location?.message}
+                        validateStatus={errors.location ? "error" : ""}
+                        help={errors.location?.message}
                     >
                         <Controller
-                            name="personalDetails.location"
+                            name="location"
                             control={control}
                             rules={{ required: "Location is required" }}
                             render={({ field }) => (
@@ -276,50 +292,53 @@ const ClientSubmissionForm = () => {
                     </Form.Item>
 
 
-
                     <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mt-6 mb-4">Basic Information</h3>
                     <Row gutter={16}>
-                        {/* Gender Selection */}
                         <Col span={12}>
                             <Form.Item
                                 label={<>Gender <span style={{ color: "red" }}>*</span></>}
-                                validateStatus={errors.basicInformation?.gender ? "error" : ""}
-                                help={errors.basicInformation?.gender?.message}
+                                validateStatus={errors.gender ? "error" : ""}
+                                help={errors.gender?.message}
                             >
                                 <Controller
-                                    name="basicInformation.gender"
+                                    name="gender"
                                     control={control}
                                     rules={{ required: "Gender is required" }}
                                     render={({ field }) => (
-                                        <Select {...field} placeholder="Select your Gender">
-                                            <Select.Option value="Male">Male</Select.Option>
-                                            <Select.Option value="Female">Female</Select.Option>
+                                        <Select
+                                            {...field}
+                                            placeholder="Select your Gender"
+                                            onChange={(value) => field.onChange(value)}
+                                        >
+                                            <Option value="Male">Male</Option>
+                                            <Option value="Female">Female</Option>
                                         </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Religion Selection */}
                         <Col span={12}>
                             <Form.Item
                                 label={<>Religion <span style={{ color: "red" }}>*</span></>}
-                                validateStatus={errors.basicInformation?.religion ? "error" : ""}
-                                help={errors.basicInformation?.religion?.message}
+                                validateStatus={errors.religion ? "error" : ""}
+                                help={errors.religion?.message}
                             >
                                 <Controller
-                                    name="basicInformation.religion"
+                                    name="religion"
                                     control={control}
                                     rules={{ required: "Religion is required" }}
                                     render={({ field }) => (
-                                        <Select {...field} placeholder="Select Religion">
+                                        <Select
+                                            {...field}
+                                            placeholder="Select Religion"
+                                            onChange={(value) => field.onChange(value)}
+                                        >
                                             {[
-                                                "Sikh", "Hindu", "Jain", "Buddhist",
-                                                "Spiritual", "Muslim", "Christian", "Other"
+                                                'Sikh', 'Hindu', 'Jain', 'Buddhist', 'Spiritual', 'Muslim', 'Christain', 'Other'
                                             ].map((religion) => (
-                                                <Select.Option key={religion} value={religion}>
+                                                <Option key={religion} value={religion}>
                                                     {religion}
-                                                </Select.Option>
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
@@ -327,17 +346,15 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-
                     <Row gutter={16}>
-                        {/* Marital Status */}
                         <Col span={12}>
                             <Form.Item
                                 label={<>Marital Status <span style={{ color: "red" }}>*</span></>}
-                                validateStatus={errors.basicInformation?.maritalStatus ? "error" : ""}
-                                help={errors.basicInformation?.maritalStatus?.message}
+                                validateStatus={errors.maritalStatus ? "error" : ""}
+                                help={errors.maritalStatus?.message}
                             >
                                 <Controller
-                                    name="basicInformation.maritalStatus"
+                                    name="maritalStatus"
                                     control={control}
                                     rules={{ required: "Marital Status is required" }}
                                     render={({ field }) => (
@@ -345,33 +362,37 @@ const ClientSubmissionForm = () => {
                                             {...field}
                                             placeholder="Select marital status"
                                             onChange={(value) => field.onChange(value)}
-                                            value={field.value ?? null}
                                         >
                                             {[
-                                                "Never Married", "Divorced", "Widowed", "Separated", "Annulled",
-                                                "Divorced(1 child, Living Together)", "Divorced(2 children, Living Together)",
-                                                "Divorced(3 children, Living Together)", "Awaiting Divorce",
-                                                "Widowed(1 child, Living Together)", "Divorced(Without child)"
+                                                "Never Married",
+                                                "Divorced",
+                                                "Windowed",
+                                                "Separated",
+                                                "Annulled",
+                                                "Divorced(1 child , Living Together)",
+                                                "Divorced(2 children , Living Together)",
+                                                "Divorced(3 children , Living Together)",
+                                                "Awaiting Divorce",
+                                                "Widowed(1 child , Living Together)",
+                                                "Divorced(Without child)",
                                             ].map((status) => (
-                                                <Select.Option key={status} value={status}>
+                                                <Option key={status} value={status}>
                                                     {status}
-                                                </Select.Option>
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Birthdate */}
                         <Col span={12}>
                             <Form.Item
                                 label={<>Birthdate <span style={{ color: "red" }}>*</span></>}
-                                validateStatus={errors.basicInformation?.birthdate ? "error" : ""}
-                                help={errors.basicInformation?.birthdate?.message}
+                                validateStatus={errors.birthDate ? "error" : ""}
+                                help={errors.birthDate?.message}
                             >
                                 <Controller
-                                    name="basicInformation.birthdate"
+                                    name="birthDate"
                                     control={control}
                                     rules={{ required: "Birthdate is required" }}
                                     render={({ field: { onChange, value, ref } }) => (
@@ -380,7 +401,7 @@ const ClientSubmissionForm = () => {
                                             format="YYYY-MM-DD"
                                             placeholder="Select birthdate"
                                             value={value ? dayjs(value) : null}
-                                            onChange={(date) => onChange(date ? date.format("YYYY-MM-DD") : null)}
+                                            onChange={(date) => onChange(date ? date.toDate() : null)}
                                             ref={ref}
                                         />
                                     )}
@@ -389,59 +410,85 @@ const ClientSubmissionForm = () => {
                         </Col>
                     </Row>
 
-
                     <Row gutter={16}>
-                        {/* Caste */}
                         <Col span={12}>
                             <Form.Item
                                 label="Caste"
-                                validateStatus={errors.basicInformation?.caste ? "error" : ""}
-                                help={errors.basicInformation?.caste?.message}
+                                validateStatus={errors.subcaste ? "error" : ""}
+                                help={errors.subcaste?.message}
                             >
                                 <Controller
-                                    name="basicInformation.caste"
+                                    name="subcaste"
                                     control={control}
                                     render={({ field }) => (
                                         <Select
                                             {...field}
                                             placeholder="Select caste"
                                             onChange={(value) => field.onChange(value)}
-                                            value={field.value ?? null}
                                         >
                                             {[
-                                                "Ad Dharmi", "Ahluwalia", "Arora", "Baazigar", "Bhatia", "Bhatra", "Brahmin", "Baniya",
-                                                "Chimba", "Ghumar", "Gujjar", "Sunyar (Gold Smith)", "Hindu Punjabi", "Intercaste",
-                                                "Jatt (Sikh)", "Julahe", "Jain", "Jaat (Hindu)", "Kabir Panthi", "Kamboj", "Kashyap Rajput",
-                                                "Khatri", "Kshatriya", "Lubana", "Mahajan", "Maid Rajput", "Mair Rajput", "Majabi",
-                                                "Nai", "Parjapat", "Rai", "Rajput", "Ramdasia", "Ramgharia", "Ravidasia", "Saini",
-                                                "Tonk Khatriya", "Other"
-                                            ].map((caste) => (
-                                                <Select.Option key={caste} value={caste}>
-                                                    {caste}
-                                                </Select.Option>
+                                                "Ad Dharmi",
+                                                "Ahluwalia",
+                                                "Arora",
+                                                "Baazigar",
+                                                "Bhatia",
+                                                "Bhatra",
+                                                "Brahmin",
+                                                "Baniya",
+                                                "Chimba",
+                                                "Ghumar",
+                                                "Gujjar",
+                                                "Sunyar (Gold Smith)",
+                                                "Hindu Punjabi",
+                                                "Intercaste",
+                                                "Jatt (Sikh)",
+                                                "Julahe",
+                                                "Jain",
+                                                "Jaat (Hindu)",
+                                                "Kabir Panthi",
+                                                "Kamboj",
+                                                "Kashyap Rajput",
+                                                "Khatri",
+                                                "Kshatriya",
+                                                "Lubana",
+                                                "Mahajan",
+                                                "Maid Rajput",
+                                                "Mair Rajput",
+                                                "Majabi",
+                                                "Nai",
+                                                "Parjapat",
+                                                "Rai",
+                                                "Rajput",
+                                                "Ramdasia",
+                                                "Ramgharia",
+                                                "Ravidasia",
+                                                "Saini",
+                                                "Tonk Khatriya",
+                                                "Other",
+                                            ].map((subcaste) => (
+                                                <Option key={subcaste} value={subcaste}>
+                                                    {subcaste}
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Height */}
                         <Col span={12}>
                             <Form.Item
                                 label="Height (ft & in)"
-                                validateStatus={errors.basicInformation?.height ? "error" : ""}
-                                help={errors.basicInformation?.height?.message}
+                                validateStatus={errors.height ? "error" : ""}
+                                help={errors.height?.message}
                             >
                                 <Controller
-                                    name="basicInformation.height"
+                                    name="height"
                                     control={control}
                                     render={({ field }) => (
                                         <Select
                                             {...field}
                                             placeholder="Select height"
                                             onChange={(value) => field.onChange(value)}
-                                            value={field.value ?? null}
                                         >
                                             {Array.from({ length: 48 }, (_, i) => {
                                                 const totalInches = i + 48;
@@ -449,9 +496,9 @@ const ClientSubmissionForm = () => {
                                                 const inches = totalInches % 12;
                                                 const height = `${feet}'${inches}"`;
                                                 return (
-                                                    <Select.Option key={height} value={height}>
+                                                    <Option key={height} value={height}>
                                                         {height}
-                                                    </Select.Option>
+                                                    </Option>
                                                 );
                                             })}
                                         </Select>
@@ -461,46 +508,40 @@ const ClientSubmissionForm = () => {
                         </Col>
                     </Row>
 
-
-                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">
-                        Education & Profession
-                    </h3>
+                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">Education & Profession</h3>
                     <Row gutter={16}>
-                        {/* Employment */}
                         <Col span={12}>
                             <Form.Item
                                 label="Employment/ Job"
-                                validateStatus={errors.educationProfession?.employment ? "error" : ""}
-                                help={errors.educationProfession?.employment?.message}
+                                validateStatus={errors.employment ? "error" : ""}
+                                help={errors.employment?.message}
                             >
                                 <Controller
-                                    name="educationProfession.employment"
+                                    name="employment"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Input
                                             onChange={onChange}
-                                            value={value ?? ""}
+                                            value={value}
                                             placeholder="Enter your employment"
                                         />
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Education */}
                         <Col span={12}>
                             <Form.Item
                                 label="Education"
-                                validateStatus={errors.educationProfession?.education ? "error" : ""}
-                                help={errors.educationProfession?.education?.message}
+                                validateStatus={errors.education ? "error" : ""}
+                                help={errors.education?.message}
                             >
                                 <Controller
-                                    name="educationProfession.education"
+                                    name="education"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Input
                                             onChange={onChange}
-                                            value={value ?? ""}
+                                            value={value}
                                             placeholder="Enter your education"
                                         />
                                     )}
@@ -509,46 +550,40 @@ const ClientSubmissionForm = () => {
                         </Col>
                     </Row>
 
-
-                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">
-                        Family Details
-                    </h3>
+                    <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">Family Details</h3>
                     <Row gutter={16}>
-                        {/* Father's Name */}
                         <Col span={12}>
                             <Form.Item
                                 label="Father's Name"
-                                validateStatus={errors.familyDetails?.fatherName ? "error" : ""}
-                                help={errors.familyDetails?.fatherName?.message}
+                                validateStatus={errors.fatherName ? "error" : ""}
+                                help={errors.fatherName?.message}
                             >
                                 <Controller
-                                    name="familyDetails.fatherName"
+                                    name="fatherName"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Input
                                             onChange={onChange}
-                                            value={value ?? ""}
+                                            value={value}
                                             placeholder="Enter your Father's Name"
                                         />
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Mother's Name */}
                         <Col span={12}>
                             <Form.Item
                                 label="Mother's Name"
-                                validateStatus={errors.familyDetails?.motherName ? "error" : ""}
-                                help={errors.familyDetails?.motherName?.message}
+                                validateStatus={errors.motherName ? "error" : ""}
+                                help={errors.motherName?.message}
                             >
                                 <Controller
-                                    name="familyDetails.motherName"
+                                    name="motherName"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Input
                                             onChange={onChange}
-                                            value={value ?? ""}
+                                            value={value}
                                             placeholder="Enter your Mother's Name"
                                         />
                                     )}
@@ -557,50 +592,41 @@ const ClientSubmissionForm = () => {
                         </Col>
                     </Row>
 
-
                     <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mb-4">About Me</h3>
                     <Form.Item
-                        label={
-                            <span>
-                                Upload Images <span style={{ color: "red" }}>*</span>
-                            </span>
-                        }
+                        label={<span>Upload Images <span style={{ color: "red" }}>*</span></span>}
                         validateStatus={fileList.length === 0 ? "error" : ""}
                         help={fileList.length === 0 ? "Please upload at least one image" : ""}
                     >
-                        <Controller
-                            name="aboutMe.images"
-                            control={control}
-                            rules={{ required: "Please upload at least one image" }}
-                            render={({ }) => (
-                                <Upload
-                                    listType="picture-card"
-                                    fileList={fileList}
-                                    beforeUpload={() => false}
-                                    onChange={handleChange}
-                                    multiple
-                                >
-                                    {fileList.length < 5 && <Button icon={<UploadOutlined />}>Upload</Button>}
-                                </Upload>
-                            )}
-                        />
+                        <Upload
+                            listType="picture-card"
+                            fileList={fileList}
+                            beforeUpload={() => false}
+                            onChange={(info) => handleImageUpload(info)}
+                            multiple
+                        >
+                            {fileList.length < 5 && <Button icon={<UploadOutlined />}>Upload</Button>}
+                        </Upload>
                     </Form.Item>
-
 
                     <h3 className="text-xl font-semibold text-[rgb(174,8,71)] mt-6 mb-4">Match Preferences</h3>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 label={<span>Preferred Gender <span style={{ color: "red" }}>*</span></span>}
-                                validateStatus={errors.matchPreferences?.preferredGender ? "error" : ""}
-                                help={errors.matchPreferences?.preferredGender?.message}
+                                validateStatus={errors.preferredGender ? "error" : ""}
+                                help={errors.preferredGender?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.preferredGender"
+                                    name="preferredGender"
                                     control={control}
                                     rules={{ required: "Preferred Gender is required" }}
-                                    render={({ field }) => (
-                                        <Select {...field} placeholder="Select your Gender">
+                                    render={({ field: { onChange, value } }) => (
+                                        <Select
+                                            placeholder="Select your Gender"
+                                            onChange={onChange}
+                                            value={value}
+                                        >
                                             <Option value="Male">Male</Option>
                                             <Option value="Female">Female</Option>
                                         </Select>
@@ -608,29 +634,36 @@ const ClientSubmissionForm = () => {
                                 />
                             </Form.Item>
                         </Col>
-
                         <Col span={12}>
                             <Form.Item
                                 label={<span>Preferred Religion <span style={{ color: "red" }}>*</span></span>}
-                                validateStatus={errors.matchPreferences?.preferredReligion ? "error" : ""}
-                                help={errors.matchPreferences?.preferredReligion?.message}
+                                validateStatus={errors.preferredReligion ? "error" : ""}
+                                help={errors.preferredReligion?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.preferredReligion"
+                                    name="preferredReligion"
                                     control={control}
                                     rules={{ required: "Preferred Religion is required" }}
-                                    render={({ field }) => (
-                                        <Select {...field} placeholder="Select your Religion">
-                                            {['Sikh', 'Hindu', 'Jain', 'Buddhist', 'Spiritual', 'Muslim', 'Christian', 'Other'].map((religion) => (
-                                                <Option key={religion} value={religion}>{religion}</Option>
+                                    render={({ field: { onChange, value } }) => (
+                                        <Select
+                                            placeholder="Select your Religion"
+                                            onChange={onChange}
+                                            value={value}
+                                        >
+                                            {[
+                                                'Sikh', 'Hindu', 'Jain', 'Buddhist', 'Spiritual', 'Muslim', 'Christain', 'Other'
+                                            ].map((preferredReligion) => (
+                                                <Option key={preferredReligion} value={preferredReligion}>
+                                                    {preferredReligion}
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
                                 />
+
                             </Form.Item>
                         </Col>
                     </Row>
-
 
                     <Row gutter={16}>
                         {/* Preferred Age Range */}
@@ -639,16 +672,15 @@ const ClientSubmissionForm = () => {
                                 <Row gutter={8}>
                                     <Col span={11}>
                                         <Controller
-                                            name="matchPreferences.preferredAgeRange.min"
+                                            name="preferredAge.min"
                                             control={control}
                                             render={({ field: { onChange, value } }) => (
                                                 <InputNumber
                                                     min={18}
-                                                    max={100}
                                                     placeholder="Min Age"
                                                     className="w-full"
-                                                    value={value ?? undefined}
-                                                    onChange={(val) => onChange(val ?? undefined)}
+                                                    value={value !== undefined ? Number(value) : undefined}
+                                                    onChange={(val) => onChange(val || 0)}
                                                 />
                                             )}
                                         />
@@ -656,16 +688,15 @@ const ClientSubmissionForm = () => {
                                     <Col span={2} className="text-center">to</Col>
                                     <Col span={11}>
                                         <Controller
-                                            name="matchPreferences.preferredAgeRange.max"
+                                            name="preferredAge.max"
                                             control={control}
                                             render={({ field: { onChange, value } }) => (
                                                 <InputNumber
                                                     min={18}
-                                                    max={100}
                                                     placeholder="Max Age"
                                                     className="w-full"
-                                                    value={value ?? undefined}
-                                                    onChange={(val) => onChange(val ?? undefined)}
+                                                    value={value !== undefined ? Number(value) : undefined}
+                                                    onChange={(val) => onChange(val || 0)}
                                                 />
                                             )}
                                         />
@@ -674,39 +705,40 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
 
+
                         {/* Preferred Height */}
                         <Col span={12}>
                             <Form.Item label="Preferred Height">
                                 <Row gutter={8}>
                                     <Col span={11}>
                                         <Controller
-                                            name="matchPreferences.preferredHeight.min"
+                                            name="preferredHeight.min"
                                             control={control}
-                                            rules={{ required: "Min height is required" }}
-                                            render={({ field }) => (
-                                                <InputNumber
-                                                    {...field}
-                                                    placeholder="Min Height (cm)"
-                                                    min={100}
-                                                    max={250}
-                                                    onChange={(value) => field.onChange(value)}
+                                            render={({ field: { onChange, value } }) => (
+                                                <Select
+                                                    options={heightOptions}
+                                                    placeholder="Min Height"
+                                                    className="w-full"
+                                                    onChange={onChange}
+                                                    value={value || null}
                                                 />
                                             )}
                                         />
                                     </Col>
-                                    <Col span={2} className="text-center">to</Col>
+                                    <Col span={2} className="text-center">
+                                        to
+                                    </Col>
                                     <Col span={11}>
                                         <Controller
-                                            name="matchPreferences.preferredHeight.max"
+                                            name="preferredHeight.max"
                                             control={control}
-                                            rules={{ required: "Max height is required" }}
-                                            render={({ field }) => (
-                                                <InputNumber
-                                                    {...field}
-                                                    placeholder="Max Height (cm)"
-                                                    min={100}
-                                                    max={250}
-                                                    onChange={(value) => field.onChange(value)}
+                                            render={({ field: { onChange, value } }) => (
+                                                <Select
+                                                    options={heightOptions}
+                                                    placeholder="Max Height"
+                                                    className="w-full"
+                                                    onChange={onChange}
+                                                    value={value || null}
                                                 />
                                             )}
                                         />
@@ -715,73 +747,128 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-
                     <Row gutter={16}>
-                        {/* Preferred Caste */}
                         <Col span={12}>
                             <Form.Item
                                 label="Caste"
-                                validateStatus={errors.matchPreferences?.caste ? "error" : ""}
-                                help={errors.matchPreferences?.caste?.message}
+                                validateStatus={errors.preferredSubcaste ? "error" : ""}
+                                help={errors.preferredSubcaste?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.caste"
+                                    name="preferredSubcaste"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select caste"
                                             onChange={onChange}
-                                            value={value ?? undefined}
-                                            allowClear
+                                            value={value}
                                         >
                                             {[
-                                                "Ad Dharmi", "Ahluwalia", "Arora", "Baazigar", "Bhatia", "Bhatra",
-                                                "Brahmin", "Baniya", "Chimba", "Ghumar", "Gujjar", "Sunyar (Gold Smith)",
-                                                "Hindu Punjabi", "Intercaste", "Jatt (Sikh)", "Julahe", "Jain",
-                                                "Jaat (Hindu)", "Kabir Panthi", "Kamboj", "Kashyap Rajput", "Khatri",
-                                                "Kshatriya", "Lubana", "Mahajan", "Maid Rajput", "Mair Rajput", "Majabi",
-                                                "Nai", "Parjapat", "Rai", "Rajput", "Ramdasia", "Ramgharia", "Ravidasia",
-                                                "Saini", "Tonk Khatriya", "Other",
-                                            ].map((caste) => (
-                                                <Select.Option key={caste} value={caste}>
-                                                    {caste}
-                                                </Select.Option>
+                                                "Ad Dharmi",
+                                                "Ahluwalia",
+                                                "Arora",
+                                                "Baazigar",
+                                                "Bhatia",
+                                                "Bhatra",
+                                                "Brahmin",
+                                                "Baniya",
+                                                "Chimba",
+                                                "Ghumar",
+                                                "Gujjar",
+                                                "Sunyar (Gold Smith)",
+                                                "Hindu Punjabi",
+                                                "Intercaste",
+                                                "Jatt (Sikh)",
+                                                "Julahe",
+                                                "Jain",
+                                                "Jaat (Hindu)",
+                                                "Kabir Panthi",
+                                                "Kamboj",
+                                                "Kashyap Rajput",
+                                                "Khatri",
+                                                "Kshatriya",
+                                                "Lubana",
+                                                "Mahajan",
+                                                "Maid Rajput",
+                                                "Mair Rajput",
+                                                "Majabi",
+                                                "Nai",
+                                                "Parjapat",
+                                                "Rai",
+                                                "Rajput",
+                                                "Ramdasia",
+                                                "Ramgharia",
+                                                "Ravidasia",
+                                                "Saini",
+                                                "Tonk Khatriya",
+                                                "Other",
+                                            ].map((preferredSubcaste) => (
+                                                <Option
+                                                    key={preferredSubcaste}
+                                                    value={preferredSubcaste}
+                                                >
+                                                    {preferredSubcaste}
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Preferred City */}
                         <Col span={12}>
                             <Form.Item
                                 label="City Preferred"
-                                validateStatus={errors.matchPreferences?.cityPreferred ? "error" : ""}
-                                help={errors.matchPreferences?.cityPreferred?.message}
+                                validateStatus={errors.cityPreferred ? "error" : ""}
+                                help={errors.cityPreferred?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.cityPreferred"
+                                    name="cityPreferred"
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select City Preferred"
                                             onChange={onChange}
-                                            value={value ?? undefined}
-                                            allowClear
+                                            value={value}
                                         >
                                             {[
-                                                "Amritsar", "Barnala", "Bathinda", "Dera Bassi", "Delhi", "Chandigarh",
-                                                "Faridkot", "Fatehgarh Sahib", "Firozpur", "Gurdaspur", "Gujarat",
-                                                "Hoshiarpur", "Himachal Pradesh", "Haryana", "Jalandhar", "Jammu and Kashmir",
-                                                "Kapurthala", "Khanna", "Ludhiana", "Mansa", "Moga", "Muktsar(Sri Muktsar Sahib)",
-                                                "Nakodar", "Patiala", "Phagwara", "Rupnagar", "Rajasthan",
-                                                "(Mohali)Sahibzada Ajit Singh Nagar", "Sangrur", "(Nawanshahr)Shahid Bhagat Singh Nagar",
-                                                "Tarn Taran", "Uttarakhand", "Uttar Pradesh", "Zirakpur",
-                                            ].map((city) => (
-                                                <Select.Option key={city} value={city}>
-                                                    {city}
-                                                </Select.Option>
+                                                "Amritsar",
+                                                "Barnala",
+                                                "Bathinda",
+                                                "Dera Bassi",
+                                                "Delhi",
+                                                "Chandigarh",
+                                                "Faridkot",
+                                                "Fatehgarh Sahib",
+                                                "Firozpur",
+                                                "Gurdaspur",
+                                                "Gujarat",
+                                                "Hoshiarpur",
+                                                "Himachal Pradesh",
+                                                "Haryana",
+                                                "Jalandhar",
+                                                "Jammu and Kashmir",
+                                                "Kapurthala",
+                                                "Khanna",
+                                                "Ludhiana",
+                                                "Mansa",
+                                                "Moga",
+                                                "Muktsar(Sri Muktsar Sahib)",
+                                                "Nakodar",
+                                                "Patiala",
+                                                "Phagwara",
+                                                "Rupnagar",
+                                                "Rajasthan",
+                                                "(Mohali)Sahibzada Ajit Singh Nagar",
+                                                "Sangrur",
+                                                "(Nawanshahr)Shahid Bhagat Singh Nagar",
+                                                "Tarn Taran",
+                                                "Uttarakhand",
+                                                "Uttar Pradesh",
+                                                "Zirakpur",
+                                            ].map((cityPreferred) => (
+                                                <Option key={cityPreferred} value={cityPreferred}>
+                                                    {cityPreferred}
+                                                </Option>
                                             ))}
                                         </Select>
                                     )}
@@ -794,15 +881,18 @@ const ClientSubmissionForm = () => {
                         <Col span={12}>
                             <Form.Item
                                 label="Preferred Appearance"
-                                validateStatus={errors.matchPreferences?.preferredAppearance ? "error" : ""}
-                                help={errors.matchPreferences?.preferredAppearance?.message}
+                                validateStatus={errors.preferredAppearance ? "error" : ""}
+                                help={errors.preferredAppearance?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.preferredAppearance"
+                                    name="preferredAppearance"
                                     control={control}
-                                    rules={{ required: "Preferred Appearance is required" }}
-                                    render={({ field }) => (
-                                        <Select {...field} placeholder="Select Preferred Appearance">
+                                    render={({ field: { onChange, value } }) => (
+                                        <Select
+                                            placeholder="Select Preferred Appearance"
+                                            onChange={onChange}
+                                            value={value}
+                                        >
                                             {[
                                                 "Hair-cut",
                                                 "Turbaned (with trimmed beard)",
@@ -820,32 +910,33 @@ const ClientSubmissionForm = () => {
                                 />
                             </Form.Item>
                         </Col>
-
                         <Col span={12}>
                             <Form.Item
                                 label="Marital Status Preference"
-                                validateStatus={errors.matchPreferences?.maritalStatusPreference ? "error" : ""}
-                                help={errors.matchPreferences?.maritalStatusPreference?.message}
+                                validateStatus={errors.maritalStatusPreference ? "error" : ""}
+                                help={errors.maritalStatusPreference?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.maritalStatusPreference"
+                                    name="maritalStatusPreference"
                                     control={control}
-                                    rules={{ required: "Marital Status Preference is required" }}
-                                    render={({ field }) => (
-                                        <Select {...field} placeholder="Select Marital Status Preference">
+                                    render={({ field: { onChange, value } }) => (
+                                        <Select
+                                            placeholder="Select Marital Status Preference"
+                                            onChange={onChange}
+                                            value={value}
+                                        >
                                             {[
-                                                "Single",
-                                                "Married",
+                                                "Never Married",
                                                 "Divorced",
-                                                "Widowed",
+                                                "Windowed",
                                                 "Separated",
                                                 "Annulled",
-                                                "Divorced (1 child, Living Together)",
-                                                "Divorced (2 children, Living Together)",
-                                                "Divorced (3 children, Living Together)",
+                                                "Divorced(1 child , Living Together)",
+                                                "Divorced(2 children , Living Together)",
+                                                "Divorced(3 children , Living Together)",
                                                 "Awaiting Divorce",
-                                                "Widowed (1 child, Living Together)",
-                                                "Divorced (Without child)",
+                                                "Widowed(1 child , Living Together)",
+                                                "Divorced(Without child)"
                                             ].map((status) => (
                                                 <Option key={status} value={status}>
                                                     {status}
@@ -857,58 +948,54 @@ const ClientSubmissionForm = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-
-
-
                     <Row gutter={16}>
-                        {/* Education Preference */}
                         <Col span={12}>
                             <Form.Item
                                 label="Education Preference"
-                                validateStatus={errors.matchPreferences?.educationPreference ? "error" : ""}
-                                help={errors.matchPreferences?.educationPreference?.message}
+                                validateStatus={errors.educationPreferrence ? "error" : ""}
+                                help={errors.educationPreferrence?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.educationPreference"
+                                    name="educationPreferrence"
                                     control={control}
-                                    rules={{ required: "Education preference is required" }}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select Education Preference"
                                             onChange={onChange}
-                                            value={value ?? undefined}
-                                            allowClear
-                                            options={[
+                                            value={value}
+                                        >
+                                            {[
                                                 "High School",
                                                 "Senior Secondary School",
                                                 "Graduation - Bachelor’s degree, BA, BSc, BCom etc.",
                                                 "Post-Graduation - Master’s degree, MA, MSc, MCom etc.",
                                                 "Doctorate - PhD",
-                                            ].map((education) => ({ label: education, value: education }))}
-                                        />
+                                            ].map((education) => (
+                                                <Option key={education} value={education}>
+                                                    {education}
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Employment Preference */}
                         <Col span={12}>
                             <Form.Item
                                 label="Employment Preference"
-                                validateStatus={errors.matchPreferences?.employmentPreference ? "error" : ""}
-                                help={errors.matchPreferences?.employmentPreference?.message}
+                                validateStatus={errors.employmentPreferrence ? "error" : ""}
+                                help={errors.employmentPreferrence?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.employmentPreference"
+                                    name="employmentPreferrence"
                                     control={control}
-                                    rules={{ required: "Employment preference is required" }}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select Employment Preference"
                                             onChange={onChange}
-                                            value={value ?? undefined}
-                                            allowClear
-                                            options={[
+                                            value={value}
+                                        >
+                                            {[
                                                 "Private Sector",
                                                 "Government Job",
                                                 "Businessman",
@@ -919,72 +1006,70 @@ const ClientSubmissionForm = () => {
                                                 "Homemaker",
                                                 "Consultant",
                                                 "Part-Time Worker",
-                                            ].map((employment) => ({ label: employment, value: employment }))}
-                                        />
+                                            ].map((employment) => (
+                                                <Option key={employment} value={employment}>
+                                                    {employment}
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
                     </Row>
 
-
                     <Row gutter={16}>
-                        {/* Vegetarian Preference */}
                         <Col span={12}>
                             <Form.Item
                                 label="Vegetarian Preference"
-                                validateStatus={errors.matchPreferences?.vegetarianPreference ? "error" : ""}
-                                help={errors.matchPreferences?.vegetarianPreference?.message}
+                                validateStatus={errors.vegetarianPreferrence ? "error" : ""}
+                                help={errors.vegetarianPreferrence?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.vegetarianPreference"
+                                    name="vegetarianPreferrence"
                                     control={control}
-                                    rules={{ required: "Vegetarian preference is required" }}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select Vegetarian Preference"
-                                            onChange={(val) => onChange(val === "Yes")}
-                                            value={value !== undefined ? (value ? "Yes" : "No") : undefined}
-                                            allowClear
-                                            options={[
-                                                { label: "Yes", value: "Yes" },
-                                                { label: "No", value: "No" },
-                                            ]}
-                                        />
+                                            onChange={onChange}
+                                            value={value}
+                                        >
+                                            {["Yes", "No"].map((option) => (
+                                                <Option key={option} value={option}>
+                                                    {option}
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
-
-                        {/* Drink Alcohol */}
                         <Col span={12}>
                             <Form.Item
                                 label="Drink Alcohol"
-                                validateStatus={errors.matchPreferences?.drinkAlcohol ? "error" : ""}
-                                help={errors.matchPreferences?.drinkAlcohol?.message}
+                                validateStatus={errors.drinkAlcoholPreferrence ? "error" : ""}
+                                help={errors.drinkAlcoholPreferrence?.message}
                             >
                                 <Controller
-                                    name="matchPreferences.drinkAlcohol"
+                                    name="drinkAlcoholPreferrence"
                                     control={control}
-                                    rules={{ required: "Drink alcohol preference is required" }}
                                     render={({ field: { onChange, value } }) => (
                                         <Select
                                             placeholder="Select Drink Alcohol"
-                                            onChange={(val) => onChange(val === "Yes")}
-                                            value={value !== undefined ? (value ? "Yes" : "No") : undefined}
-                                            allowClear
-                                            options={[
-                                                { label: "Yes", value: "Yes" },
-                                                { label: "No", value: "No" },
-                                            ]}
-                                        />
+                                            onChange={onChange}
+                                            value={value}
+                                        >
+                                            {['Yes,occasionally', 'yes,regularly', 'No'].map((option) => (
+                                                <Option key={option} value={option}>
+                                                    {option}
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     )}
                                 />
                             </Form.Item>
                         </Col>
                     </Row>
-
-
                     <Form.Item className="flex justify-center">
                         <Button
                             type="primary"

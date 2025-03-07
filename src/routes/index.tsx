@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 import Loader from "../components/layout/Loader";
 import Layout from "../components/layout/Layout";
 
-const Submission = lazy(() => import("../pages/clientsForm"));
+const Submission = lazy(() => import("../pages/clientsForm/index"));
 const Suggestions = lazy(() => import("../pages/clientsForm/Suggestions"));
 
 const Overview = lazy(() => import("../pages/overview"));
