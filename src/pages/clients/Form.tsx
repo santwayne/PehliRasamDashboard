@@ -110,7 +110,7 @@ const Form = () => {
                     {/* Dynamic Form Tab */}
                     <TabPane tab="Form Groups" key="1">
                         <div className="w-full">
-                            <Collapse className="w-full border border-gray-200 rounded-md" expandIconPosition="end">
+                            <Collapse className="w-full border border-gray-200 rounded-md" expandIconPosition="start">
                                 {formData.map((group, index) => (
                                     <Panel header={group.groupName} key={group.groupId || index} className="w-full">
                                         {group.fields.length > 0 ? (

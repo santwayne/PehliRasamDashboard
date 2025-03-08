@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input, Button, Card, Modal } from "antd";
+import { Input, Button, Card, Modal, Form } from "antd";
 import { SearchOutlined, AppstoreOutlined, UserAddOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 const staticClients = [
@@ -27,12 +27,25 @@ const staticClients = [
 const Clients: React.FC = () => {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const openModal = (client: any) => {
+  const openClientModal = (client: any) => {
     setSelectedClient(client);
-    setIsModalOpen(true);
+    setIsClientModalOpen(true);
+  };
+
+  const openAddClientModal = () => {
+    setIsAddClientModalOpen(true);
+  };
+
+  const handleSaveClient = () => {
+    form.validateFields().then((values) => {
+      setIsAddClientModalOpen(false);
+      navigate("/dashboard/add-client", { state: values });
+    });
   };
 
   return (
@@ -41,7 +54,7 @@ const Clients: React.FC = () => {
       <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <Input prefix={<SearchOutlined />} placeholder="Type name to search" className="w-full sm:w-1/3" />
         <div className="flex flex-wrap gap-2">
-          <Button icon={<UserAddOutlined />} type="primary" onClick={() => navigate("/dashboard/add-client")}>
+          <Button icon={<UserAddOutlined />} type="primary" onClick={openAddClientModal}>
             + Client
           </Button>
           <Button icon={<AppstoreOutlined />} onClick={() => setView("grid")} />
@@ -61,7 +74,7 @@ const Clients: React.FC = () => {
             )}
             <h3 className="text-lg font-semibold">{client.name}</h3>
             <p className="text-gray-500">{client.location}</p>
-            <Button type="primary" icon={<InfoCircleOutlined />} onClick={() => openModal(client)}>
+            <Button type="primary" icon={<InfoCircleOutlined />} onClick={() => openClientModal(client)}>
               View Details
             </Button>
           </Card>
@@ -71,8 +84,8 @@ const Clients: React.FC = () => {
       {/* Client Details Modal */}
       <Modal
         title={<h2 className="text-lg font-semibold text-center">{selectedClient?.name}</h2>}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        open={isClientModalOpen}
+        onCancel={() => setIsClientModalOpen(false)}
         footer={null}
         centered
         width={350}
@@ -97,6 +110,27 @@ const Clients: React.FC = () => {
             </Button>
           </div>
         )}
+      </Modal>
+
+      {/* Add Client Modal */}
+      <Modal
+        title="Add New Client"
+        open={isAddClientModalOpen}
+        onCancel={() => setIsAddClientModalOpen(false)}
+        onOk={handleSaveClient}
+        okText="Save"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item label="First Name" name="firstName" rules={[{ required: true, message: "First name is required" }]}>
+            <Input placeholder="Enter first name" />
+          </Form.Item>
+          <Form.Item label="Last Name" name="lastName" rules={[{ required: true, message: "Last name is required" }]}>
+            <Input placeholder="Enter last name" />
+          </Form.Item>
+          <Form.Item label="Email" name="email" rules={[{ required: true, type: "email", message: "Enter a valid email" }]}>
+            <Input placeholder="Enter email" />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

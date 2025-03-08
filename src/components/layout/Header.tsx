@@ -22,7 +22,7 @@ const NavHeader = ({ onClick, collapsed }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => setIsModalOpen(true);
-  const confirmLogout = () => navigate("/auth/login");
+  const confirmLogout = () => navigate("/login");
 
   return (
     <div className="fixed top-0 left-0 w-full h-16 bg-white shadow-md flex items-center justify-between px-6 z-50">

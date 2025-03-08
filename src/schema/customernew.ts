@@ -39,15 +39,15 @@ const schema = z.object({
       max: z.number().min(18, "Minimum age must be at least 18").max(100, "Maximum age cannot exceed 100"),
     }),
     preferredHeight: z.object({
-        min: z
-          .number()
-          .min(100, { message: "Height min should be between 100 and 250 cm" })
-          .max(250, { message: "Height min should be between 100 and 250 cm" }),
-        max: z
-          .number()
-          .min(100, { message: "Height max should be between 100 and 250 cm" })
-          .max(250, { message: "Height max should be between 100 and 250 cm" }),
-      }),
+      min: z
+        .number()
+        .min(100, { message: "Height min should be between 100 and 250 cm" })
+        .max(250, { message: "Height min should be between 100 and 250 cm" }),
+      max: z
+        .number()
+        .min(100, { message: "Height max should be between 100 and 250 cm" })
+        .max(250, { message: "Height max should be between 100 and 250 cm" }),
+    }),
     caste: z.string().optional(),
     cityPreferred: z.string().optional(),
     preferredAppearance: z.string().optional(),

@@ -5,6 +5,8 @@ import Layout from "../components/layout/Layout";
 
 const Submission = lazy(() => import("../pages/clientsForm/index"));
 const Suggestions = lazy(() => import("../pages/clientsForm/Suggestions"));
+const Login = lazy(() => import("../pages/auth/Login"));
+
 
 const Overview = lazy(() => import("../pages/overview"));
 const TimelineMain = lazy(() => import("../pages/overview/TimelineMain"));
@@ -22,6 +24,10 @@ const Inbox = lazy(() => import("../pages/communication/Inbox"));
 const Sent = lazy(() => import("../pages/communication/Sent"));
 
 const Fields = lazy(() => import("../pages/settings/client-settings/Fields"));
+const Lists = lazy(() => import('../pages/settings/client-settings/List'));
+const Matching = lazy(() => import('../pages/settings/client-settings/Matching'))
+const Users = lazy(() => import('../pages/settings/users'))
+const AdminInfo = lazy(() => import('../pages/settings/admin-info'))
 
 const AppRoutes = () => {
     return (
@@ -29,6 +35,8 @@ const AppRoutes = () => {
             <Routes>
                 <Route path="/submission" element={<Submission />} />
                 <Route path="/suggestions" element={<Suggestions />} />
+                <Route path="/login" element={<Login />} />
+
                 <Route path="/" element={<Navigate to="/dashboard/overview" />} />
 
                 {/* Dashboard Layout Persistent */}
@@ -57,6 +65,10 @@ const AppRoutes = () => {
                     <Route path="sent" element={<Sent />} />
 
                     <Route path="fields" element={<Fields />} />
+                    <Route path="lists" element={<Lists />} />
+                    <Route path="matching" element={<Matching />} />
+                    <Route path="users" element={<Users />} />
+                    <Route path="admin-info" element={<AdminInfo />} />
                 </Route>
             </Routes>
         </Suspense>

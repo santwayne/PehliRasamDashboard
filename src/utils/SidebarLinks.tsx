@@ -44,8 +44,9 @@ export const sidebarLinks: SidebarLink[] = [
         icon: <BiUser />,
         label: "Clients",
         children: [
-          { key: "/dashboard/lists", icon: <BiUser />, label: "Lists" },
+          { key: "/dashboard/lists", icon: <BiUser />, label: "Lists and Types" },
           { key: "/dashboard/fields", icon: <BiUser />, label: "Fields" },
+          { key: "/dashboard/matching", icon: <BiUser />, label: "Matching" }
         ],
       },
       { key: "/dashboard/users", icon: <MdSettings />, label: "Users" },

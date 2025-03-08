@@ -4,25 +4,23 @@ import Header from "./Header";
 import MembershipForm from "./Form";
 
 const AddClient = () => {
-
     const location = useLocation();
     const showMembershipForm = location.pathname === "/dashboard/add-client";
 
     return (
         <div className="flex h-screen bg-gray-100">
+            {/* Sidebar (Fixed on the left) */}
             <Sidebar />
-            <div className="pl-[27%] flex-1 overflow-y-auto">
+
+            {/* Main Content Section */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Header stays on top of content only */}
                 <Header />
 
-                <div className="pl-[0%] flex-1 bg-gray-100 h-screen p-6">
-
-                    {showMembershipForm ? (
-                        <MembershipForm />
-                    ) : (
-                        <Outlet />
-                    )}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    {showMembershipForm ? <MembershipForm /> : <Outlet />}
                 </div>
-
             </div>
         </div>
     );
