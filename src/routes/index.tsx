@@ -7,6 +7,7 @@ const Submission = lazy(() => import("../pages/clientsForm/index"));
 const Suggestions = lazy(() => import("../pages/clientsForm/Suggestions"));
 const Login = lazy(() => import("../pages/auth/Login"));
 
+const ProfileInfo = lazy(()=> import("../pages/profile-setting"))
 
 const Overview = lazy(() => import("../pages/overview"));
 const TimelineMain = lazy(() => import("../pages/overview/TimelineMain"));
@@ -45,6 +46,7 @@ const AppRoutes = () => {
                     <Route path="overview" element={<Overview />} />
                     <Route path="timelinemain" element={<TimelineMain />} />
                     <Route path="profile-update" element={<ProfileUpdate />} />
+                    <Route path="profile-setting-info" element={<ProfileInfo />} />
 
 
                     <Route path="clients" element={<Clients />} />

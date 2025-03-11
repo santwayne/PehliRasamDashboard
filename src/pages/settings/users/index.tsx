@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Tag, Modal, Form, Input, message } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import apiClient from "../../../config/apiClient"; // Import API Client
+import { Table, Button, Tag, Modal, Form, Input, message, Popconfirm } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import apiClient from "../../../config/apiClient";
 
 interface User {
     key: string;
-    name: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    password: string;
     status: string;
     lastLogin: string;
 }
@@ -17,41 +18,62 @@ const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [form] = Form.useForm();
 
-    // Fetch Users (Assuming an endpoint exists)
     useEffect(() => {
         fetchUsers();
     }, []);
 
     const fetchUsers = async () => {
         try {
-            const response = await apiClient.get("/admin/list"); // Adjust endpoint as needed
-            setUsers(response.data);
-        } catch (error) {
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                message.error("Unauthorized. Please log in again.");
+                return;
+            }
+
+            const response = await apiClient.get("/admin/adminList", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const formattedUsers = response.data.admin.map((user: any) => ({
+                key: user._id,
+                userId: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                status: user.status || "Active",
+                lastLogin: user.lastLogin || "N/A",
+            }));
+
+            setUsers(formattedUsers);
+        } catch (error: any) {
             console.error("Error fetching users:", error);
-            message.error("Failed to fetch users");
+
+            if (error.response?.status === 401) {
+                message.error("Session expired. Please log in again.");
+            } else {
+                message.error("Failed to fetch users");
+            }
         }
     };
 
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
+            const token = localStorage.getItem("token");
 
-            const newUser = {
-                fistName: values.firstName, // Fix spelling if necessary
-                lastName: values.lastName,
-                email: values.email,
-                password: values.password, // If empty, backend will set default
-            };
+            if (!token) {
+                message.error("Unauthorized. Please log in again.");
+                return;
+            }
 
-            // Send request to backend
-            const response = await apiClient.post("/admin/adminCreation", newUser);
+            await apiClient.post("/admin/adminCreation", values, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
             message.success("Admin created successfully!");
-
             setIsModalVisible(false);
             form.resetFields();
-
-            // Refresh users list
             fetchUsers();
         } catch (error: any) {
             console.error("Error creating admin:", error.response?.data || error);
@@ -59,34 +81,101 @@ const UserManagement: React.FC = () => {
         }
     };
 
+    const handleDelete = async (userId: string) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                message.error("Unauthorized. Please log in again.");
+                return;
+            }
+
+            await apiClient.post("/admin/deleteAdmin",
+                { userId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            message.success("Admin deleted successfully!");
+            fetchUsers(); // Refresh the table
+        } catch (error: any) {
+            console.error("Error deleting admin:", error.response?.data || error);
+            message.error(error.response?.data?.message || "Failed to delete admin");
+        }
+    };
+
     const columns = [
-        { title: "Name", dataIndex: "name" },
+        {
+            title: "Name",
+            dataIndex: "firstName",
+            render: (_: any, record: User) => `${record.firstName} ${record.lastName}`,
+        },
         { title: "Email", dataIndex: "email" },
-        { title: "Status", dataIndex: "status", render: (status: string) => <Tag color="blue">{status}</Tag> },
+        {
+            title: "Status",
+            dataIndex: "status",
+            render: (status: string) => <Tag color="blue">{status}</Tag>,
+        },
         { title: "Last Login", dataIndex: "lastLogin" },
+        {
+            title: "Actions",
+            render: (_: any, record: User) => (
+                <div style={{ display: "flex", gap: "8px" }}>
+                    <Popconfirm
+                        title="Are you sure to delete this admin?"
+                        onConfirm={() => handleDelete(record.userId)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <Button icon={<DeleteOutlined />} danger />
+                    </Popconfirm>
+                </div>
+            ),
+        },
     ];
 
     return (
         <div style={{ padding: 20, background: "#fff", borderRadius: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
                 <h2>Users</h2>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                        setIsModalVisible(true);
+                        form.resetFields();
+                    }}
+                >
                     New Admin
                 </Button>
             </div>
 
             <Table columns={columns} dataSource={users} pagination={false} />
 
-            {/* New Admin Modal */}
-            <Modal title="Add New Admin" visible={isModalVisible} onCancel={() => setIsModalVisible(false)} onOk={handleOk}>
+            <Modal
+                title="Add New Admin"
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onOk={handleOk}
+            >
                 <Form form={form} layout="vertical">
-                    <Form.Item label="First Name" name="firstName" rules={[{ required: true, message: "Enter first name" }]}>
+                    <Form.Item
+                        label="First Name"
+                        name="firstName"
+                        rules={[{ required: true, message: "Enter first name" }]}
+                    >
                         <Input />
                     </Form.Item>
-                    <Form.Item label="Last Name" name="lastName" rules={[{ required: true, message: "Enter last name" }]}>
+                    <Form.Item
+                        label="Last Name"
+                        name="lastName"
+                        rules={[{ required: true, message: "Enter last name" }]}
+                    >
                         <Input />
                     </Form.Item>
-                    <Form.Item label="Email" name="email" rules={[{ required: true, type: "email", message: "Enter valid email" }]}>
+                    <Form.Item
+                        label="Email"
+                        name="email"
+                        rules={[{ required: true, type: "email", message: "Enter valid email" }]}
+                    >
                         <Input />
                     </Form.Item>
                     <Form.Item label="Password" name="password">

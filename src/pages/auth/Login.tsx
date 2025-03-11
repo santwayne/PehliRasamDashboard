@@ -1,21 +1,27 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSetRecoilState } from "recoil";
 import { message } from "antd";
+import apiClient from "../../config/apiClient";
+import { authState } from "../../state/auth";
+import axios from "axios";
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [errors, setErrors] = useState({ email: "", password: "" });
+    const setAuthState = useSetRecoilState(authState);
     const navigate = useNavigate();
 
     const validateForm = () => {
+        const newErrors = { email: "", password: "" };
         let valid = true;
-        let newErrors = { email: "", password: "" };
 
-        if (!formData.email) {
+        if (!formData.email.trim()) {
             newErrors.email = "Email is required.";
             valid = false;
         }
-        if (!formData.password) {
+
+        if (!formData.password.trim()) {
             newErrors.password = "Password is required.";
             valid = false;
         }
@@ -24,20 +30,45 @@ const Login = () => {
         return valid;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (validateForm()) {
-            const users = JSON.parse(localStorage.getItem("users") || "[]");
-            const user = users.find((u: any) => u.email === formData.email && u.password === formData.password);
+        if (!validateForm()) return;
 
-            if (user) {
-                message.success(`Welcome, ${user.name}!`);
+        try {
+            const response = await apiClient.post("/admin/adminLogin", formData);
+
+            const { token, admin } = response.data;
+
+            if (token && admin) {
+                message.success("Login successful!");
+
+                localStorage.setItem("token", token);
+                localStorage.setItem("admin", JSON.stringify(admin));
+
+                setAuthState({
+                    accessToken: token,
+                    ...admin,
+                    isAuthenticated: true,
+                });
+
                 navigate("/");
+
             } else {
-                message.error("Invalid email or password");
+                message.error("Invalid server response.");
+            }
+        } catch (error: unknown) {
+            console.error("Axios Error:", error);
+
+            if (axios.isAxiosError(error)) {
+                const errorMsg = error.response?.data?.error || "Login failed. Please try again.";
+                message.error(errorMsg);
+            } else {
+                message.error("An unexpected error occurred.");
             }
         }
     };
+
+
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
@@ -45,7 +76,9 @@ const Login = () => {
                 <h1 className="text-4xl font-extrabold text-center bg-gradient-to-r from-black to-gray-700 text-transparent bg-clip-text">
                     Pehli Rasam
                 </h1>
-                <p className="text-sm text-gray-600 text-center mt-1">Welcome! Please log in to continue.</p>
+                <p className="text-sm text-gray-600 text-center mt-1">
+                    Welcome! Please log in to continue.
+                </p>
 
                 <form className="mt-6" onSubmit={handleSubmit}>
                     <div className="mb-4">
@@ -72,7 +105,10 @@ const Login = () => {
                         {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
                     </div>
 
-                    <button className="w-full mt-4 p-3 text-white bg-gradient-to-r from-black to-gray-700 rounded-lg hover:opacity-90 shadow-lg transition">
+                    <button
+                        type="submit"
+                        className="w-full mt-4 p-3 text-white bg-gradient-to-r from-black to-gray-700 rounded-lg hover:opacity-90 shadow-lg transition"
+                    >
                         Log in
                     </button>
                 </form>

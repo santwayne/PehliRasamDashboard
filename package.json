@@ -27,6 +27,7 @@
     "recharts": "^2.15.1",
     "recoil": "^0.7.7",
     "recoil-nexus": "^0.5.1",
+    "recoil-persist": "^5.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
