@@ -9,10 +9,11 @@ interface Field {
     attributeName: string;
     attributeType: string;
     attributePlaceHolder?: string;
-    attributeState: boolean;
+    attributeStatus: boolean;
     attributeOption?: string[];
-    attributeEnum?: string; // Added for database purpose
+    attributeEnum?: string[];
     form_group_id: string;
+    isActive?: boolean;
 }
 
 interface Group {
@@ -24,7 +25,10 @@ interface FieldModalProps {
     visible: boolean;
     onClose: () => void;
     editingField: Field | null;
+    selectedGroup: Group | null;
+    fetchGroups: () => Promise<void>;
 }
+
 
 const FieldModal: React.FC<FieldModalProps> = ({ visible, onClose, editingField }) => {
     const [form] = Form.useForm();
@@ -41,9 +45,9 @@ const FieldModal: React.FC<FieldModalProps> = ({ visible, onClose, editingField 
                     attributeName: editingField.attributeName,
                     attributeType: editingField.attributeType,
                     attributePlaceHolder: editingField.attributePlaceHolder || "",
-                    attributeState: editingField.attributeState ?? false,
-                    attributeOption: editingField.attributeOption?.join(", ") || "",
-                    attributeEnum: editingField.attributeEnum || "",
+                    attributeStatus: editingField.attributeStatus ?? false,
+                    isActive: editingField.isActive ?? false,
+                    attributeOption: editingField.attributeOption || [],
                     form_group_id: editingField.form_group_id,
                 });
             } else {
@@ -65,28 +69,34 @@ const FieldModal: React.FC<FieldModalProps> = ({ visible, onClose, editingField 
     const handleFinish = async (values: any) => {
         try {
             setLoading(true);
+
+
+            const attributeOptionsArray = Array.isArray(values.attributeOption)
+                ? values.attributeOption.map((item: string) => item.trim())
+                : (typeof values.attributeOption === "string" ? values.attributeOption.split(",").map((item: string) => item.trim()) : []);
+
             const payload = {
                 attributeName: values.attributeName,
                 attributeType: values.attributeType,
                 attributePlaceHolder: values.attributePlaceHolder,
-                attributeOption: values.attributeOption
-                    ? values.attributeOption.split(",").map((item: string) => item.trim())
-                    : [],
-                attributeEnum: values.attributeEnum,
-                attributeState: values.attributeState,
+                attributeOption: attributeOptionsArray,
+                attributeEnum: attributeOptionsArray,
+                attributeStatus: values.attributeStatus,
+                isActive: values.isActive,
                 form_group_id: values.form_group_id,
             };
 
             if (editingField) {
-                await apiClient.post("/admin/updateFromField", { fieldId: editingField._id, ...payload });
+                await apiClient.post("/admin/updateFormField", { fieldId: editingField._id, ...payload });
                 message.success("Field updated successfully!");
             } else {
                 await apiClient.post("/admin/createFromField", payload);
                 message.success("Field created successfully!");
             }
             onClose();
-        } catch (error) {
-            message.error(error.response?.data?.error || "Failed to process request.");
+        } catch (error: unknown) {
+            console.error("Error in handleFinish:", error);
+            message.error("Failed to create or update the field.");
         } finally {
             setLoading(false);
         }
@@ -120,29 +130,32 @@ const FieldModal: React.FC<FieldModalProps> = ({ visible, onClose, editingField 
                         <Option value="heading">Heading</Option>
                     </Select>
                 </Form.Item>
-                
-                {/* Hide placeholder for 'heading' type */}
+
+                {/* Use correct placeholder field */}
                 {selectedType !== "heading" && (
                     <Form.Item name="attributePlaceHolder" label="Placeholder">
                         <Input placeholder="Enter placeholder text" />
                     </Form.Item>
                 )}
 
-                <Form.Item name="attributeState" label="Status" valuePropName="checked">
+                <Form.Item name="attributeStatus" label="Status" valuePropName="checked">
                     <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+                </Form.Item>
+
+                <Form.Item name="isActive" label="Visibility" valuePropName="checked">
+                    <Switch checkedChildren="Visible" unCheckedChildren="Hidden" />
                 </Form.Item>
 
                 {/* Show options only for 'select', 'radio', or 'checkbox' */}
                 {(selectedType === "select" || selectedType === "radio" || selectedType === "checkbox") && (
-                    <Form.Item name="attributeOption" label="Options (comma-separated)">
-                        <Input placeholder="Enter options separated by commas" />
+                    <Form.Item name="attributeOption" label="Options">
+                        <Select
+                            mode="tags"
+                            placeholder="Enter options and press Enter"
+                            tokenSeparators={[","]}
+                        />
                     </Form.Item>
                 )}
-
-                {/* Attribute Enum for Database Purpose */}
-                <Form.Item name="attributeEnum" label="Enum (for Database)">
-                    <Input placeholder="Enter enum values" />
-                </Form.Item>
 
                 <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: "10px" }}>
                     {editingField ? "Update" : "Create"}

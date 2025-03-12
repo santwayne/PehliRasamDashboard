@@ -1,14 +1,15 @@
-// types.ts
 export interface Field {
     _id: string;
     attributeName: string;
     attributeType: string;
     attributePlaceHolder?: string;
-    attributeState: boolean;
-    attributeEnum?: string[];
+    attributeStatus: boolean;
     attributeOption?: string[];
-    groupId: string;
+    attributeEnum?: string[];
+    form_group_id: string;
+    isActive?: boolean;
 }
+
 
 export interface Group {
     _id: string;

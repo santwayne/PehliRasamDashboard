@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined }
 import apiClient from "../../../../config/apiClient";
 import GroupModal from "./GroupModal";
 import FieldModal from "./FieldModal";
-import { Field, Group } from "./types"; 
+import { Field, Group } from "./types";
 
 const { Panel } = Collapse;
 const { confirm } = Modal;
@@ -31,10 +31,13 @@ const Fields = () => {
                     _id: field.attributeId,
                     attributeName: field.attributeName,
                     attributeType: field.attributeType,
-                    attributeEnum: field.attributeEnum || [],
                     attributeOption: field.attributeOption || [],
+                    attributeStatus: field.attributeStatus ?? true,
+                    attributePlaceHolder: field.attributePlaceHolder ?? "",
+                    visibility: field.visibility ?? true,
+                    active: field.active ?? true,
                     form_group_id: group._id,
-                }))
+                })),
             }));
             setGroups(formattedGroups);
         } catch (error) {
@@ -55,7 +58,7 @@ const Fields = () => {
 
     const handleDeleteGroup = async (id: string) => {
         try {
-            await apiClient.post(`/admin/deleteFromGroup`, { groupId: id });
+            await apiClient.post("/admin/deleteFromGroup", { groupId: id });
             message.success("Group deleted!");
             fetchGroups();
         } catch {
@@ -65,7 +68,7 @@ const Fields = () => {
 
     const handleDeleteField = async (id: string) => {
         try {
-            await apiClient.post(`/admin/deleteFromField`, { fieldId: id });
+            await apiClient.post("/admin/deleteFormField", { fieldId: id });
             message.success("Field deleted!");
             fetchGroups();
         } catch {
@@ -110,9 +113,11 @@ const Fields = () => {
                     >
                         <Table
                             columns={[
-                                { title: "Placeholder", dataIndex: "attributeName", key: "attributeName" },
+                                { title: "Name", dataIndex: "attributeName", key: "attributeName" },
                                 { title: "Type", dataIndex: "attributeType", key: "attributeType" },
-                                { title: "Placeholder", dataIndex: "attributeEnum", key: "attributeEnum", render: (enumValues) => Array.isArray(enumValues) ? enumValues.join(", ") : "" },
+                                { title: "Options", dataIndex: "attributeOption", key: "attributeOption", render: (options) => options.join(", ") },
+                                { title: "Visibility", dataIndex: "visibility", key: "visibility", render: (visible) => (visible ? "Yes" : "No") },
+                                { title: "Active", dataIndex: "active", key: "active", render: (active) => (active ? "Yes" : "No") },
                                 {
                                     title: "Actions",
                                     render: (_, record) => (
@@ -152,6 +157,7 @@ const Fields = () => {
                 onClose={() => {
                     setGroupModalVisible(false);
                     setEditingGroup(null);
+                    fetchGroups();
                 }}
                 editingGroup={editingGroup}
                 fetchGroups={fetchGroups}
@@ -163,6 +169,7 @@ const Fields = () => {
                     setFieldModalVisible(false);
                     setEditingField(null);
                     setSelectedGroup(null);
+                    fetchGroups();
                 }}
                 editingField={editingField}
                 selectedGroup={selectedGroup}
