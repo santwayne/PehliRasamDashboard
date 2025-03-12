@@ -1,90 +1,100 @@
-import React, { useState, useEffect } from "react";
-import { Card, Table, Switch, Button, message, Spin } from "antd";
-import apiClient from "../../config/apiClient"; // Adjust path if needed
+import React, { useState, useEffect } from 'react';
+import { Card, Table, Checkbox, Button, message, Spin } from 'antd';
+import apiClient from '../../config/apiClient';
 
-interface NotificationSettings {
-  [key: string]: boolean;
+interface Permissions {
+    [section: string]: {
+        [field: string]: boolean;
+    };
 }
 
-const NotificationSettingsTab: React.FC = () => {
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({});
-  const [loading, setLoading] = useState<boolean>(false);
+const PermissionsTab: React.FC = () => {
+    const [permissions, setPermissions] = useState<Permissions>({});
+    const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
-    if (storedData.notification) {
-      setNotificationSettings(storedData.notification);
-    }
-  }, []);
+    useEffect(() => {
+        const storedData = JSON.parse(localStorage.getItem('admin') || '{}');
+        if (storedData.permissions) {
+            setPermissions(storedData.permissions);
+        }
+    }, []);
 
-  const handleToggle = (key: string) => {
-    setNotificationSettings((prev) => {
-      const updatedSettings = { ...prev, [key]: !prev[key] };
+    const handlePermissionChange = (section: string, field: string) => {
+        setPermissions((prev) => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [field]: !prev[section]?.[field],
+            },
+        }));
+    };
 
-      // Save to localStorage
-      const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
-      storedData.notification = updatedSettings;
-      localStorage.setItem("admin", JSON.stringify(storedData));
+    const handleUpdatePermissions = async () => {
+        setLoading(true);
+        try {
+            const storedData = JSON.parse(localStorage.getItem('admin') || '{}');
+            const userId: string | undefined = storedData.id;
 
-      return updatedSettings;
-    });
-  };
+            if (!userId) {
+                message.error('User ID is missing. Please log in again.');
+                return;
+            }
 
-  const handleUpdateNotifications = async () => {
-    setLoading(true);
-    try {
-      const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
-      const userId: string | undefined = storedData.id;
+            const payload = { userId, permissions };
+            const response = await apiClient.post('/admin/updateAdminPermission', payload);
+            message.success(response.data.message || 'Permissions updated successfully');
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                message.error(error.message || 'Failed to update permissions');
+            } else {
+                message.error('An unknown error occurred');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      if (!userId) {
-        message.error("User ID is missing. Please log in again.");
-        return;
-      }
+    const data = Object.keys(permissions).map((section) => ({
+        key: section,
+        section,
+        permissions: Object.entries(permissions[section] || {}).map(([field, value]) => (
+            <Checkbox
+                key={field}
+                checked={Boolean(value)}
+                onChange={() => handlePermissionChange(section, field)}
+            >
+                {field}
+            </Checkbox>
+        )),
+    }));
 
-      const payload = { userId, notification: notificationSettings };
-      const response = await apiClient.post("/admin/updateAdminNotification", payload);
-      message.success(response.data.message || "Notification settings updated successfully");
-    } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : "Failed to update notifications");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const columns = [
+        {
+            title: 'Section',
+            dataIndex: 'section',
+            key: 'section',
+            render: (text: string) => <span className="font-semibold">{text}</span>,
+        },
+        {
+            title: 'Permissions',
+            dataIndex: 'permissions',
+            key: 'permissions',
+            render: (perms: React.ReactNode) => <div className="flex flex-wrap gap-2">{perms}</div>,
+        },
+    ];
 
-  const data = Object.keys(notificationSettings).map((key) => ({
-    key,
-    type: key.replace(/([A-Z])/g, " $1").trim(), // Format key to readable text
-    switch: (
-      <Switch key={key} checked={Boolean(notificationSettings[key])} onChange={() => handleToggle(key)} />
-    ),
-  }));
-
-  const columns = [
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (text: string) => <span className="font-semibold">{text}</span>,
-    },
-    {
-      title: "Enabled",
-      dataIndex: "switch",
-      key: "switch",
-    },
-  ];
-
-  return (
-    <Spin spinning={loading}>
-      <div className="p-6">
-        <Card title="Notification Settings" className="mb-4">
-          <Table columns={columns} dataSource={data} pagination={false} bordered />
-        </Card>
-        <Button type="primary" className="mt-4" onClick={handleUpdateNotifications}>
-          Save Changes
-        </Button>
-      </div>
-    </Spin>
-  );
+    return (
+        <Spin spinning={loading}>
+            <div className="p-6 bg-white shadow-md rounded-lg">
+                <Card title="Permissions Management" className="mb-4">
+                    <Table columns={columns} dataSource={data} pagination={false} bordered />
+                </Card>
+                <Button type="primary" className="mt-4" onClick={handleUpdatePermissions}>
+                    Save Changes
+                </Button>
+            </div>
+        </Spin>
+    );
 };
 
-export default NotificationSettingsTab;
+export default PermissionsTab;

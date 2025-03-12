@@ -26,7 +26,6 @@ const BasicInfoTab = () => {
     const [loading, setLoading] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-    // Handle text input change
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -49,7 +48,6 @@ const BasicInfoTab = () => {
 
 
 
-    // Fetch admin details
     const fetchAdminDetails = async () => {
         setLoading(true);
         try {
@@ -69,7 +67,7 @@ const BasicInfoTab = () => {
                 number: data.admin.number || '',
                 email: data.admin.email || '',
                 password: '',
-                profilePic: null, // Reset profilePic since backend returns a URL
+                profilePic: null,
             });
 
             setImagePreview(data.admin.profilePic || null);
@@ -87,7 +85,7 @@ const BasicInfoTab = () => {
         fetchAdminDetails();
     }, []);
 
-    // Handle profile update
+
     const handleUpdate = async () => {
         setLoading(true);
         try {

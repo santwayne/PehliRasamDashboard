@@ -95,7 +95,7 @@ const UserManagement: React.FC = () => {
             );
 
             message.success("Admin deleted successfully!");
-            fetchUsers(); // Refresh the table
+            fetchUsers();
         } catch (error: any) {
             console.error("Error deleting admin:", error.response?.data || error);
             message.error(error.response?.data?.message || "Failed to delete admin");

@@ -7,7 +7,7 @@ const Submission = lazy(() => import("../pages/clientsForm/index"));
 const Suggestions = lazy(() => import("../pages/clientsForm/Suggestions"));
 const Login = lazy(() => import("../pages/auth/Login"));
 
-const ProfileInfo = lazy(()=> import("../pages/profile-setting"))
+const ProfileInfo = lazy(() => import("../pages/profile-setting"))
 
 const Overview = lazy(() => import("../pages/overview"));
 const TimelineMain = lazy(() => import("../pages/overview/TimelineMain"));
@@ -24,11 +24,10 @@ const Communication = lazy(() => import("../pages/clients/communication"));
 const Inbox = lazy(() => import("../pages/communication/Inbox"));
 const Sent = lazy(() => import("../pages/communication/Sent"));
 
-const Fields = lazy(() => import("../pages/settings/client-settings/Fields"));
+const Fields = lazy(() => import("../pages/settings/client-settings/Fields/Fields"));
 const Lists = lazy(() => import('../pages/settings/client-settings/List'));
 const Matching = lazy(() => import('../pages/settings/client-settings/Matching'))
 const Users = lazy(() => import('../pages/settings/users'))
-const AdminInfo = lazy(() => import('../pages/settings/admin-info'))
 
 const AppRoutes = () => {
     return (
@@ -46,7 +45,6 @@ const AppRoutes = () => {
                     <Route path="overview" element={<Overview />} />
                     <Route path="timelinemain" element={<TimelineMain />} />
                     <Route path="profile-update" element={<ProfileUpdate />} />
-                    <Route path="profile-setting-info" element={<ProfileInfo />} />
 
 
                     <Route path="clients" element={<Clients />} />
@@ -70,7 +68,7 @@ const AppRoutes = () => {
                     <Route path="lists" element={<Lists />} />
                     <Route path="matching" element={<Matching />} />
                     <Route path="users" element={<Users />} />
-                    <Route path="admin-info" element={<AdminInfo />} />
+                    <Route path="profile-setting-info" element={<ProfileInfo />} />
                 </Route>
             </Routes>
         </Suspense>

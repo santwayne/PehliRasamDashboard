@@ -50,7 +50,7 @@ export const sidebarLinks: SidebarLink[] = [
         ],
       },
       { key: "/dashboard/users", icon: <MdSettings />, label: "Users" },
-      { key: "/dashboard/admin-info", icon: <MdSettings />, label: "Admin Info" },
+      { key: "/dashboard/profile-setting-info", icon: <MdSettings />, label: "Admin Info" },
     ],
   },
 ];

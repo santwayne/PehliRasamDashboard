@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { Tabs } from 'antd';
 import BasicInfoTab from './BasicInfoTab';
 import PermissionsTab from './PermissionsTab';

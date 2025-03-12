@@ -8,7 +8,6 @@ const apiClient = axios.create({
   baseURL,
 });
 
-// Request Interceptor: Attach Token in Headers
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,7 +19,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 Errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {

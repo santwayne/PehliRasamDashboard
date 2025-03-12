@@ -1,55 +1,56 @@
 import React, { useEffect, useState } from "react";
-import { Table, Switch, message, Spin } from "antd";
-import apiClient from "../../config/apiClient"; // Adjust path if needed
+import { Table, Switch, message, Spin, Card, Button } from "antd";
+import apiClient from "../../config/apiClient";
+
+interface NotificationType {
+  email: boolean;
+  sms: boolean;
+  web: boolean;
+}
 
 const NotificationSettingsTab: React.FC = () => {
-  const [notificationSettings, setNotificationSettings] = useState<Record<string, boolean>>({});
+  const [notificationSettings, setNotificationSettings] = useState<Record<string, NotificationType>>({});
   const [loading, setLoading] = useState(false);
 
-  // Fetch user ID from localStorage
-  const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const userId: string | undefined = storedData.id;
-
   useEffect(() => {
-    if (!userId) {
-      message.error("User ID is missing. Please log in again.");
-      return;
+    const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
+    if (storedData.notification) {
+      setNotificationSettings(storedData.notification);
     }
-    fetchNotificationSettings();
-  }, [userId]);
+  }, []);
 
-  // Fetch current notification settings
-  const fetchNotificationSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get(`/admin/getAdminNotification/${userId}`);
-      setNotificationSettings(response.data.notification || {});
-    } catch (error) {
-      message.error("Failed to load notification settings.");
-    } finally {
-      setLoading(false);
-    }
+  const handleToggle = (key: string, field: keyof NotificationType, value: boolean) => {
+    setNotificationSettings((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
+    }));
   };
 
-  // Handle notification toggle
-  const handleToggle = async (key: string, value: boolean) => {
+  const handleSaveChanges = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const updatedSettings = { ...notificationSettings, [key]: value };
-
-      await apiClient.put("/admin/updateAdminNotification", {
-        userId,
-        notification: updatedSettings,
-      });
-
-      setNotificationSettings(updatedSettings);
-
-      // Update localStorage
       const storedData = JSON.parse(localStorage.getItem("admin") || "{}");
-      storedData.notification = updatedSettings;
+      const userId: string | undefined = storedData._id;
+
+      if (!userId) {
+        message.error("User ID is missing. Please log in again.");
+        return;
+      }
+
+      const payload = {
+        userId,
+        notification: notificationSettings,
+      };
+
+      const response = await apiClient.post("/admin/updateAdminNotification", payload);
+
+      storedData.notification = notificationSettings;
       localStorage.setItem("admin", JSON.stringify(storedData));
 
-      message.success("Notification settings updated successfully.");
+      message.success(response.data.message || "Notification settings updated successfully.");
     } catch (error) {
       message.error("Failed to update notification settings.");
     } finally {
@@ -57,28 +58,48 @@ const NotificationSettingsTab: React.FC = () => {
     }
   };
 
-  // Table columns
   const columns = [
     {
-      title: "Type",
+      title: "Notification Type",
       dataIndex: "type",
       key: "type",
       className: "font-medium text-gray-700",
     },
     {
-      title: "Delivery by",
+      title: "Email",
       dataIndex: "key",
-      key: "delivery",
+      key: "email",
       render: (key: string) => (
         <Switch
-          checked={notificationSettings[key] || false}
-          onChange={(checked) => handleToggle(key, checked)}
+          checked={notificationSettings[key]?.email || false}
+          onChange={(checked) => handleToggle(key, "email", checked)}
+        />
+      ),
+    },
+    {
+      title: "SMS",
+      dataIndex: "key",
+      key: "sms",
+      render: (key: string) => (
+        <Switch
+          checked={notificationSettings[key]?.sms || false}
+          onChange={(checked) => handleToggle(key, "sms", checked)}
+        />
+      ),
+    },
+    {
+      title: "Web",
+      dataIndex: "key",
+      key: "web",
+      render: (key: string) => (
+        <Switch
+          checked={notificationSettings[key]?.web || false}
+          onChange={(checked) => handleToggle(key, "web", checked)}
         />
       ),
     },
   ];
 
-  // Notification options
   const data = [
     { key: "birthdayReminder", type: "Birthday Reminder" },
     { key: "newSubmittedClient", type: "New Submitted Client" },
@@ -93,9 +114,13 @@ const NotificationSettingsTab: React.FC = () => {
 
   return (
     <Spin spinning={loading}>
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Notification Settings</h2>
-        <Table columns={columns} dataSource={data} pagination={false} rowKey="key" bordered />
+      <div className="p-6 bg-white shadow-md rounded-lg">
+        <Card title="Notification Settings" className="mb-4">
+          <Table columns={columns} dataSource={data} pagination={false} rowKey="key" bordered />
+        </Card>
+        <Button type="primary" className="mt-4" onClick={handleSaveChanges}>
+          Save Changes
+        </Button>
       </div>
     </Spin>
   );
